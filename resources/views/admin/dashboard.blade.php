@@ -182,7 +182,7 @@
     </div>
 </div>
 
-<script src="https://code.highcharts.com/highcharts.js"></script>
+
 <script>
     // Live Clock
     function updateClock() {
