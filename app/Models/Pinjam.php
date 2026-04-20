@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -11,9 +12,20 @@ class Pinjam extends Model
     protected $table = 'master_pinjam';
 
     protected $fillable = [
-        'id_nasaba', 'tabungan', 'pinjam', 'angsuran', 
-        't_pinjam', 'tgl_pinjam', 'status', 'ket', 
-        'tempo_hari', 'lokasi_penarikan', 'pembayaran'
+        'id_nasaba',
+        'tabungan',
+        'pinjam',
+        'angsuran',
+        't_pinjam',
+        'tgl_pinjam',
+        'status',
+        'ket',
+        'tempo_hari',
+        'lokasi_penarikan',
+        'pembayaran',
+        'jaminan',
+        'tgl_akhir',
+        'detail_tgl'
     ];
     public $timestamps = false; // Jika tabel benar-benar tidak punya kolom tersebut
 

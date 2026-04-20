@@ -4,23 +4,77 @@
 
 
 <style>
-    .nasabah-card { border: none; border-radius: 12px; transition: 0.3s; }
-    .avatar-img, .avatar-initial { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; }
-    .avatar-initial { background-color: #e9ecef; color: #0d6efd; border: 1px solid #dee2e6; text-transform: uppercase; }
-    
-    @media (max-width: 768px) { 
-        .desktop-table { display: none; } 
-        .mobile-card { display: block; }
-        .search-box { width: 100% !important; order: 2; }
-        .header-actions { width: 100%; order: 1; margin-bottom: 10px; }
-        .btn-tambah-mobile { width: 100%; border-radius: 10px !important; }
-        /* Pastikan dropdown mobile terlihat di atas card */
-        .dropdown-menu { z-index: 1050; }
+    .nasabah-card {
+        border: none;
+        border-radius: 12px;
+        transition: 0.3s;
     }
-    @media (min-width: 769px) { .mobile-card { display: none; } }
 
-    .img-preview-zoom { cursor: pointer; transition: transform 0.2s; }
-    .img-preview-zoom:hover { transform: scale(1.05); }
+    .avatar-img,
+    .avatar-initial {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .avatar-initial {
+        background-color: #e9ecef;
+        color: #0d6efd;
+        border: 1px solid #dee2e6;
+        text-transform: uppercase;
+    }
+
+    @media (max-width: 768px) {
+        .desktop-table {
+            display: none;
+        }
+
+        .mobile-card {
+            display: block;
+        }
+
+        .search-box {
+            width: 100% !important;
+            order: 2;
+        }
+
+        .header-actions {
+            width: 100%;
+            order: 1;
+            margin-bottom: 10px;
+        }
+
+        .btn-tambah-mobile {
+            width: 100%;
+            border-radius: 10px !important;
+        }
+
+        /* Pastikan dropdown mobile terlihat di atas card */
+        .dropdown-menu {
+            z-index: 1050;
+        }
+    }
+
+    @media (min-width: 769px) {
+        .mobile-card {
+            display: none;
+        }
+    }
+
+    .img-preview-zoom {
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .img-preview-zoom:hover {
+        transform: scale(1.05);
+    }
 </style>
 
 <div class="container py-0">
@@ -38,9 +92,9 @@
 
                 <div class="input-group shadow-sm search-box">
                     <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
-                    <input type="text" id="searchInput" class="form-control border-0" 
-                           placeholder="Cari nama atau NIK..." value="{{ request('search') }}"
-                           oninput="autoSearch(this.value)">
+                    <input type="text" id="searchInput" class="form-control border-0"
+                        placeholder="Cari nama atau NIK..." value="{{ request('search') }}"
+                        oninput="autoSearch(this.value)">
                     @if(request('search'))
                     <button class="btn btn-white border-0 text-danger" type="button" onclick="window.location.href='{{ route('nasabah.index') }}'">
                         <i class="bi bi-x-circle-fill"></i>
@@ -73,11 +127,17 @@
                     <tr>
                         <td class="ps-4">
                             <div class="d-flex align-items-center">
-                                @if($n->foto)
-                                    <img src="{{ asset('foto/'.$n->foto) }}" class="avatar-img me-3" onclick="previewFoto('{{ asset('foto/'.$n->foto) }}', '{{ $n->nama }}')">
+                                {{-- Cek apakah kolom foto di DB tidak kosong DAN file fisiknya ada di folder public/foto --}}
+                                @if($n->foto && file_exists(public_path('foto/'.$n->foto)))
+                                <img src="{{ asset('foto/'.$n->foto) }}"
+                                    class="avatar-img me-3"
+                                    style="cursor: pointer;"
+                                    onclick="previewFoto('{{ asset('foto/'.$n->foto) }}', '{{ $n->nama }}')">
                                 @else
-                                    <div class="avatar-initial me-3">{{ substr($n->nama, 0, 1) }}</div>
+                                {{-- Tampilkan inisial jika teks foto kosong ATAU file fisik tidak ditemukan --}}
+                                <div class="avatar-initial me-3">{{ strtoupper(substr($n->nama, 0, 1)) }}</div>
                                 @endif
+
                                 <div>
                                     <div class="fw-bold text-dark">{{ $n->nama }}</div>
                                     <small class="text-muted">{{ $n->tgl_daftar }}</small>
@@ -110,7 +170,9 @@
                         @csrf @method('DELETE')
                     </form>
                     @empty
-                    <tr><td colspan="5" class="text-center py-5">Data tidak ditemukan.</td></tr>
+                    <tr>
+                        <td colspan="5" class="text-center py-5">Data tidak ditemukan.</td>
+                    </tr>
                     @endforelse
                 </tbody>
             </table>
@@ -124,11 +186,18 @@
             <div class="card-body" style="background-color: #91cce433 !important">
                 <div class="d-flex align-items-start justify-content-between mb-3">
                     <div class="d-flex align-items-center">
-                        @if($n->foto)
-                            <img src="{{ asset('foto/'.$n->foto) }}" class="avatar-img me-3" onclick="previewFoto('{{ asset('foto/'.$n->foto) }}', '{{ $n->nama }}')">
+                        {{-- Cek database AND cek fisik file di folder public/foto --}}
+                        @if($n->foto && file_exists(public_path('foto/'.$n->foto)))
+                        <img src="{{ asset('foto/'.$n->foto) }}"
+                            class="avatar-img me-3"
+                            style="cursor: pointer;"
+                            onclick="previewFoto('{{ asset('foto/'.$n->foto) }}', '{{ $n->nama }}')"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {{-- Onerror di atas adalah cadangan jika file_exists lolos tapi browser gagal load --}}
                         @else
-                            <div class="avatar-initial me-3">{{ substr($n->nama, 0, 1) }}</div>
+                        <div class="avatar-initial me-3">{{ strtoupper(substr($n->nama, 0, 1)) }}</div>
                         @endif
+
                         <div>
                             <h6 class="mb-0 fw-bold">{{ $n->nama }}</h6>
                             <small class="text-primary fw-bold">{{ $n->nik }}</small>
@@ -138,7 +207,7 @@
                         <label for="">{{ $no++}}</label>
                     </div>
                 </div>
-                
+
                 <div class="row g-2 small border-top pt-2">
                     <div class="col-6 text-muted">Pekerjaan:</div>
                     <div class="col-6 text-end fw-bold">{{ $n->pekerjaan ?? '-' }}</div>
@@ -146,31 +215,31 @@
                     <div class="col-6 text-end">{{ $n->no_tlp }}</div>
                     <div class="col-12 text-end">{{ $n->alamat }}</div>
                     <div class="mt-3 pt-2 border-top">
-    <div class="row g-2">
-        <div class="col-7">
-            @if($n->lat)
-                <a href="https://www.google.com/maps?q={{ $n->lat }},{{ $n->lng }}" target="_blank" class="btn btn-sm btn-light border text-danger w-100 py-2">
-                    <i class="bi bi-geo-alt-fill"></i> Lokasi
-                </a>
-            @else
-                <button class="btn btn-sm btn-light border w-100 py-2 disabled text-muted">
-                    <i class="bi bi-geo-alt"></i> No Map
-                </button>
-            @endif
-        </div>
+                        <div class="row g-2">
+                            <div class="col-7">
+                                @if($n->lat)
+                                <a href="https://www.google.com/maps?q={{ $n->lat }},{{ $n->lng }}" target="_blank" class="btn btn-sm btn-light border text-danger w-100 py-2">
+                                    <i class="bi bi-geo-alt-fill"></i> Lokasi
+                                </a>
+                                @else
+                                <button class="btn btn-sm btn-light border w-100 py-2 disabled text-muted">
+                                    <i class="bi bi-geo-alt"></i> No Map
+                                </button>
+                                @endif
+                            </div>
 
-        <div class="col-5">
-            <div class="d-flex gap-1">
-                <button class="btn btn-warning btn-sm text-white w-100 py-2" onclick='openModal("edit", @json($n))'>
-                    <i class="bi bi-pencil-square"></i>
-                </button>
-                <button class="btn btn-danger btn-sm w-100 py-2" onclick="confirmDelete('{{ $n->id }}')">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+                            <div class="col-5">
+                                <div class="d-flex gap-1">
+                                    <button class="btn btn-warning btn-sm text-white w-100 py-2" onclick='openModal("edit", @json($n))'>
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                    <button class="btn btn-danger btn-sm w-100 py-2" onclick="confirmDelete('{{ $n->id }}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -184,7 +253,7 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <form id="formNasabah" method="POST" enctype="multipart/form-data">
             @csrf
-            <div id="methodField"></div> 
+            <div id="methodField"></div>
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header bg-primary text-white border-0">
                     <h5 class="modal-title fw-bold" id="modalTitle">Form Nasabah</h5>
@@ -221,19 +290,19 @@
                             </div>
                         </div>
                         <div class="col-12">
-    <label class="form-label fw-bold small">Foto Profil</label>
-    <input type="file" name="foto" id="fotoInput" class="form-control rounded-3" accept="image/*" onchange="previewImage(this)">
-    
-    <input type="hidden" name="remove_foto" id="remove_foto" value="0">
+                            <label class="form-label fw-bold small">Foto Profil</label>
+                            <input type="file" name="foto" id="fotoInput" class="form-control rounded-3" accept="image/*" onchange="previewImage(this)">
 
-    <div class="mt-3 p-2 border rounded bg-light text-center" id="previewContainer" style="display: none;">
-        <p class="small text-muted mb-2" id="previewLabel">Preview:</p>
-        <img id="imgPreview" class="img-thumbnail shadow-sm" style="max-height: 200px;">
-        <div class="mt-2">
-            <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearPhoto()">Hapus Foto</button>
-        </div>
-    </div>
-</div>
+                            <input type="hidden" name="remove_foto" id="remove_foto" value="0">
+
+                            <div class="mt-3 p-2 border rounded bg-light text-center" id="previewContainer" style="display: none;">
+                                <p class="small text-muted mb-2" id="previewLabel">Preview:</p>
+                                <img id="imgPreview" class="img-thumbnail shadow-sm" style="max-height: 200px;">
+                                <div class="mt-2">
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearPhoto()">Hapus Foto</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light border-0">
@@ -286,12 +355,12 @@
     function openModal(mode, data = null) {
         if (!formNasabah) return;
         formNasabah.reset();
-        
+
         // Reset state hapus foto
-        if(document.getElementById('remove_foto')) {
+        if (document.getElementById('remove_foto')) {
             document.getElementById('remove_foto').value = "0";
         }
-        
+
         document.getElementById('previewContainer').style.display = 'none';
 
         if (mode === 'tambah') {
@@ -300,10 +369,10 @@
             methodField.innerHTML = ''; // Method default POST
         } else {
             document.getElementById('modalTitle').innerText = 'Edit Nasabah';
-            formNasabah.action = "{{ url('nasabah') }}/" + data.id; 
-            
+            formNasabah.action = "{{ url('nasabah') }}/" + data.id;
+
             // Gunakan PUT untuk update agar sesuai dengan standar Laravel
-            methodField.innerHTML = '<input type="hidden" name="_method" value="PUT">'; 
+            methodField.innerHTML = '<input type="hidden" name="_method" value="PUT">';
 
             // Isi Form
             document.getElementById('nik').value = data.nik;
@@ -315,7 +384,7 @@
             document.getElementById('lng').value = data.lng || '';
 
             // Handle Foto Profil yang sudah ada
-            if(data.foto) {
+            if (data.foto) {
                 const preview = document.getElementById('imgPreview');
                 const container = document.getElementById('previewContainer');
                 preview.src = "{{ asset('foto') }}/" + data.foto;
@@ -331,17 +400,17 @@
      */
     function getLocation() {
         if (navigator.geolocation) {
-            Swal.fire({ 
-                title: 'Mencari Lokasi...', 
+            Swal.fire({
+                title: 'Mencari Lokasi...',
                 text: 'Harap tunggu sebentar',
-                allowOutsideClick: false, 
-                didOpen: () => Swal.showLoading() 
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
             });
 
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 const lat = pos.coords.latitude;
                 const lon = pos.coords.longitude;
-                
+
                 document.getElementById('lat').value = lat;
                 document.getElementById('lng').value = lon;
 
@@ -349,16 +418,31 @@
                     // Reverse Geocoding menggunakan Nominatim (OpenStreetMap)
                     const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`);
                     const data = await response.json();
-                    
+
                     if (data && data.display_name) {
                         document.getElementById('alamat').value = data.display_name;
-                        Swal.fire({ icon: 'success', title: 'Lokasi & Alamat Didapat', timer: 1500, showConfirmButton: false });
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Lokasi & Alamat Didapat',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
                     } else {
-                        Swal.fire({ icon: 'success', title: 'Lokasi Didapat', text: 'Alamat tidak ditemukan', timer: 1500 });
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Lokasi Didapat',
+                            text: 'Alamat tidak ditemukan',
+                            timer: 1500
+                        });
                     }
                 } catch (error) {
                     console.error("Geocoding Error: ", error);
-                    Swal.fire({ icon: 'success', title: 'Lokasi Didapat', text: 'Gagal mengambil detail alamat otomatis', timer: 1500 });
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Lokasi Didapat',
+                        text: 'Gagal mengambil detail alamat otomatis',
+                        timer: 1500
+                    });
                 }
 
             }, (err) => {
@@ -374,7 +458,7 @@
      */
     function previewImage(input) {
         if (input.files && input.files[0]) {
-            if(document.getElementById('remove_foto')) {
+            if (document.getElementById('remove_foto')) {
                 document.getElementById('remove_foto').value = "0";
             }
             const reader = new FileReader();
@@ -393,10 +477,10 @@
      * Fungsi Hapus Preview/Reset Foto (Sesuai Controller sebelumnya)
      */
     function clearPhoto() {
-        document.getElementById('fotoInput').value = ""; 
-        document.getElementById('imgPreview').src = ""; 
+        document.getElementById('fotoInput').value = "";
+        document.getElementById('imgPreview').src = "";
         document.getElementById('previewContainer').style.display = 'none';
-        if(document.getElementById('remove_foto')) {
+        if (document.getElementById('remove_foto')) {
             document.getElementById('remove_foto').value = "1";
         }
     }

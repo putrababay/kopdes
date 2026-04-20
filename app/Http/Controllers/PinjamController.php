@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Pinjam;
@@ -8,70 +9,77 @@ use Illuminate\Support\Facades\File;
 
 class PinjamController extends Controller
 {
-  public function index(Request $request)
-{
-    $search = $request->search;
-    $tahun = $request->get('tahun', date('Y'));
+    public function index(Request $request)
+    {
+        $search = $request->search;
+        $tahun = $request->get('tahun', date('Y'));
 
-    // Optimasi: Gunakan Select spesifik dan Eager Loading yang difilter
-    $query = Nasabah::select('id', 'nama', 'pekerjaan', 'alamat')
-        ->with(['pinjamans' => function($q) use ($search, $tahun) {
-            // Jika tidak mencari, filter tahun agar collapse tidak berat
-            if (!$search) {
-                $q->whereYear('tgl_pinjam', $tahun);
-            }
-            $q->select('id', 'id_nasaba', 'pinjam', 'angsuran', 'tgl_pinjam', 'status', 'tempo_hari', 'lokasi_penarikan', 'pembayaran')
-              ->orderBy('id', 'desc');
-        }])
-        ->withCount(['pinjamans as jumlah_transaksi' => function($q) use ($search, $tahun) {
-            if (!$search) $q->whereYear('tgl_pinjam', $tahun);
-            $q->where('status', '!=', 'LUNAS'); // Fokus pada transaksi berjalan
-        }])
-        ->withMax(['pinjamans as pinjaman_terakhir' => function($q) use ($search, $tahun) {
-            if (!$search) $q->whereYear('tgl_pinjam', $tahun);
-        }], 'tgl_pinjam');
+        // 1. Definisikan closure untuk filter tahun agar konsisten
+        $filterTahun = function ($q) use ($tahun) {
+            $q->whereBetween('tgl_pinjam', ["$tahun-01-01", "$tahun-12-31"]);
+        };
 
-    if ($search) {
-        $query->where('nama', 'LIKE', "%$search%")
-              ->orWhere('pekerjaan', 'LIKE', "%$search%");
-    } else {
-        // Hanya tampilkan nasabah yang punya tanggungan atau aktivitas di tahun tersebut
-        $query->whereHas('pinjamans', function($q) use ($tahun) {
-            $q->whereYear('tgl_pinjam', $tahun);
-        });
+
+        $query = Nasabah::select('id', 'nama', 'pekerjaan', 'alamat');
+
+        // 2. Eager Loading & Agregasi dalam satu langkah
+        $query->with(['pinjamans' => function ($q) use ($search, $filterTahun) {
+            if (!$search) $filterTahun($q);
+            $q->select('id', 'id_nasaba', 'pinjam', 'angsuran', 'tgl_pinjam', 'status', 'tempo_hari', 'lokasi_penarikan', 'pembayaran', 't_pinjam', 'jaminan')
+                ->orderBy('tgl_pinjam', 'desc');
+        }])
+            ->withCount(['pinjamans as jumlah_transaksi' => function ($q) use ($search, $filterTahun) {
+                if (!$search) $filterTahun($q);
+                $q->where('status', '!=', 'LUNAS');
+            }])
+            ->withMax(['pinjamans as pinjaman_terakhir' => function ($q) use ($search, $filterTahun) {
+                if (!$search) $filterTahun($q);
+            }], 'tgl_pinjam');
+
+        // 3. Filter Pencarian
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama', 'LIKE', "%$search%")
+                    ->orWhere('pekerjaan', 'LIKE', "%$search%");
+            });
+        } else {
+            $query->whereHas('pinjamans', $filterTahun);
+        }
+
+        $nasabahs = $query->orderByDesc('pinjaman_terakhir')->paginate(15)->appends($request->all());
+
+        // 4. OPTIMASI UTAMA: Jangan ambil semua data nasabah jika tidak perlu
+        // Ambil hanya ID dan Nama saja untuk dropdown
+        $all_nasabahs = Nasabah::select('id', 'nama', 'alamat', 'pekerjaan', 'foto')->orderBy('nama')->get();
+
+        return view('admin.pinjam.index', compact('nasabahs', 'all_nasabahs', 'tahun'));
     }
 
-    $nasabahs = $query->orderByDesc('pinjaman_terakhir')->paginate(15)->appends($request->all());
-    $all_nasabahs = Nasabah::select('id', 'nama')->get(); // Untuk dropdown modal tambah
+    // Fungsi Simpan (Store)
+    public function store(Request $request)
+    {
+        $request->validate([
+            'id_nasaba' => 'required',
+            'pinjam' => 'required|numeric',
+            'tgl_pinjam' => 'required|date',
+        ]);
 
-    return view('admin.pinjam.index', compact('nasabahs', 'all_nasabahs', 'tahun'));
-}
+        Pinjam::create($request->all());
+        return back()->with('success', 'Data pinjaman berhasil ditambahkan!');
+    }
 
-// Fungsi Simpan (Store)
-public function store(Request $request)
-{
-    $request->validate([
-        'id_nasaba' => 'required',
-        'pinjam' => 'required|numeric',
-        'tgl_pinjam' => 'required|date',
-    ]);
+    // Fungsi Update
+    public function update(Request $request, $id)
+    {
+        $pinjam = Pinjam::findOrFail($id);
+        $pinjam->update($request->all());
+        return back()->with('success', 'Data pinjaman berhasil diperbarui!');
+    }
 
-    Pinjam::create($request->all());
-    return back()->with('success', 'Data pinjaman berhasil ditambahkan!');
-}
-
-// Fungsi Update
-public function update(Request $request, $id)
-{
-    $pinjam = Pinjam::findOrFail($id);
-    $pinjam->update($request->all());
-    return back()->with('success', 'Data pinjaman berhasil diperbarui!');
-}
-
-// Fungsi Hapus
-public function destroy($id)
-{
-    Pinjam::findOrFail($id)->delete();
-    return back()->with('success', 'Data pinjaman berhasil dihapus!');
-}
+    // Fungsi Hapus
+    public function destroy($id)
+    {
+        Pinjam::findOrFail($id)->delete();
+        return back()->with('success', 'Data pinjaman berhasil dihapus!');
+    }
 }
