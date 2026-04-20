@@ -33,6 +33,12 @@
         .card { border: none; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .stat-card { padding: 20px; text-align: center; }
     </style>
+     <script src="https://code.highcharts.com/highcharts.js"></script>
+     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+     
+     
 </head>
 <body>
 
@@ -65,9 +71,13 @@
             <i class="fas fa-wallet"></i>
             <span>Simpanan</span>
         </a>
-        <a href="#" class="nav-item-mobile">
+        <a href="{{ route('pinjam.index') }}" class="nav-item-mobile {{ request()->is('pinjam') ? 'active' : '' }}">
             <i class="fas fa-hand-holding-usd"></i>
             <span>Pinjaman</span>
+        </a>
+         <a href="#" class="nav-item-mobile">
+            <i class="fas fa-mobile"></i>
+            <span>Pulsa</span>
         </a>
         <a href="{{ route('nasabah.index') }}" class="nav-item-mobile {{ request()->is('nasabah') ? 'active' : '' }}">
             <i class="fas fa-users"></i>
@@ -75,6 +85,9 @@
         </a>
     </div>
 
+   
+  
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -3,6 +3,7 @@ use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NasabahController;
+use App\Http\Controllers\PinjamController;
 
 
 Route::get('/', function () {
@@ -18,6 +19,12 @@ Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 // Pastikan menggunakan class Controller, bukan function()
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-
 Route::get('/nasabah', [NasabahController::class, 'index'])->name('nasabah.index');
-Route::get('/nasabah/data', [NasabahController::class, 'getData'])->name('nasabah.data');
+Route::post('/nasabah', [NasabahController::class, 'store'])->name('nasabah.store');
+// Gunakan POST untuk update yang menyertakan File/Foto agar tidak error di beberapa server
+Route::post('/nasabah/{id}', [NasabahController::class, 'update'])->name('nasabah.update'); 
+Route::delete('/nasabah/{id}', [NasabahController::class, 'destroy'])->name('nasabah.destroy');
+Route::resource('nasabah', NasabahController::class);
+
+
+Route::resource('pinjam', PinjamController::class);
