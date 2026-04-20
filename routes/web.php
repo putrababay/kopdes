@@ -41,6 +41,9 @@ Route::get('/angsuran', [AngsuranController::class, 'index'])->name('angsuran.in
 Route::post('/angsuran', [AngsuranController::class, 'store'])->name('angsuran.store');
 Route::post('/angsuran/{id}', [AngsuranController::class, 'update'])->name('angsuran.update');
 Route::delete('/angsuran/{id}', [AngsuranController::class, 'destroy'])->name('angsuran.destroy');
+Route::get('/angsuran/detail/{id}', [AngsuranController::class, 'getDetailNasabah'])->name('angsuran.get-detail-nasabah');
+
+
 
 route::resource('pulsa', PulsaController::class);
 Route::get('/pulsa', [PulsaController::class, 'index'])->name('pulsa.index');
