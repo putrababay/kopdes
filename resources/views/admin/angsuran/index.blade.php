@@ -54,6 +54,13 @@
     .rounded-4-desktop {
         border-radius: 1.5rem;
     }
+
+    /* Memastikan SweetAlert selalu berada di depan modal Bootstrap manapun */
+.swal2-container {
+    z-index: 9999 !important;
+}
+
+
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -174,11 +181,13 @@
     </div>
 </div>
 
-<script>
-    // Variable untuk Lazy Load
+   <script>
+    // --- Global Variables ---
     let page = 1;
     let loading = false;
+    let mapProfil;
 
+    // --- Lazy Load Scroll ---
     $(window).scroll(function() {
         if ($(window).scrollTop() + $(window).height() >= $(document).height() - 100) {
             if (!loading) {
@@ -191,7 +200,6 @@
     function loadMoreData(page) {
         loading = true;
         $('#loading').removeClass('d-none');
-
         $.ajax({
             url: "?page=" + page + "&hari={{ $harifilter }}&search={{ request('search') }}",
             type: "get",
@@ -204,41 +212,33 @@
         });
     }
 
-    // Fungsi Show Profil & Maps
-    let mapProfil;
-
-    // ... (Bagian atas sama seperti codingan Anda)
-
+    // --- Fungsi Utama: Show Profil ---
     function showProfil(id_pinjam) {
         if (!id_pinjam) return;
 
         $('#modalProfil').modal('show');
-        // Bersihkan riwayat lama agar tidak bingung saat loading
+        // Reset view ke state loading
         $('#list-riwayat-angsuran').html('<tr><td colspan="4" class="text-center"><div class="spinner-border spinner-border-sm text-primary"></div></td></tr>');
 
-        // 1. Buat template URL dengan placeholder __ID__
         let urlTemplate = "{{ route('angsuran.get-detail-nasabah', ['id' => '__ID__']) }}";
-
-        // 2. Ganti placeholder dengan variabel id_pinjam yang asli
         let finalUrl = urlTemplate.replace('__ID__', id_pinjam);
 
-
         $.ajax({
-            // SESUAIKAN URL INI DENGAN ROUTE DI WEB.PHP
             url: finalUrl,
             method: "GET",
             success: function(res) {
-                // n = data master_nasabah, p = data nasabah_pinjam, a = data angsuran
                 const n = res.nasabah;
                 const p = res.pinjam;
                 const a = res.angsuran;
 
+                // 1. Bind Data Identitas (Handling Null)
                 $('#prof-nama').text(n.nama || '-');
                 $('#prof-nik').text(n.nik || '-');
                 $('#prof-alamat').text(n.alamat || '-');
                 $('#prof-pekerjaan').text(n.pekerjaan || '-');
                 $('#prof-tlp').attr('href', 'https://wa.me/' + (n.no_tlp || ''));
 
+                // Handle Foto
                 if (n.foto) {
                     $('#prof-foto').attr('src', "{{ asset('foto') }}/" + n.foto).removeClass('d-none');
                     $('#prof-initial').addClass('d-none');
@@ -247,96 +247,25 @@
                     $('#prof-foto').addClass('d-none');
                 }
 
-                $('#prof-t-pinjam').text('Rp ' + parseInt(p.t_pinjam || 0).toLocaleString('id-ID'));
-                $('#prof-pembayaran').text('Rp ' + parseInt(p.pembayaran || 0).toLocaleString('id-ID'));
+                // 2. Bind Data Keuangan (Mencegah NaN)
+                const totalPinjam = parseInt(p.t_pinjam) || 0;
+                const totalBayar = parseInt(p.pembayaran) || 0; // Ambil dari p.pembayaran
+                
+                $('#prof-t-pinjam').text('Rp ' + totalPinjam.toLocaleString('id-ID'));
+                $('#prof-pembayaran').text('Rp ' + totalBayar.toLocaleString('id-ID'));
                 $('#prof-jaminan').text(p.jaminan || '-');
 
+                // 3. Progress Angsuran
                 const jumBayar = a.length;
-                const totalHarus = parseInt(p.angsuran || 0);
-                $('#prof-progress').html(`${jumBayar} / ${totalHarus} <small class='text-muted'>Kali</small>`);
+                const targetAngsuran = parseInt(p.angsuran) || 0;
+                $('#prof-progress').html(`${jumBayar} / ${targetAngsuran} <small class='text-muted'>Kali</small>`);
 
-                // Maps Logic
-                if (n.lat && n.lng && n.lat !== "0" && n.lng !== "0") {
-                    $('#container-maps').removeClass('d-none');
-                    setTimeout(() => {
-                        if (mapProfil) mapProfil.remove();
-                        mapProfil = L.map('map').setView([n.lat, n.lng], 15);
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapProfil);
-                        L.marker([n.lat, n.lng]).addTo(mapProfil).bindPopup(n.nama);
-                        $('#link-gmaps').attr('href', `https://www.google.com/maps?q=${n.lat},${n.lng}`);
-                    }, 400);
-                } else {
-                    $('#container-maps').addClass('d-none');
-                }
+                // 4. Handle Google Maps
+                handleMaps(n);
 
-                // Render Tabel Angsuran
-                let htmlAngsuran = '';
-
-                if (a.length > 0) {
-                    // 1. Parsing jadwal tanggal dan cek keberadaannya (Isset logic)
-                    let jadwalTanggal = null;
-                    if (p.detail_tgl) {
-                        try {
-                            jadwalTanggal = typeof p.detail_tgl === 'string' ? JSON.parse(p.detail_tgl) : p.detail_tgl;
-                        } catch (e) {
-                            console.error("Gagal parse detail_tgl", e);
-                        }
-                    }
-
-                    a.forEach((item, index) => {
-                        let isMatch = false;
-
-                        // 2. Logika Pengecekan (Isset)
-                        if (!jadwalTanggal || jadwalTanggal.length === 0) {
-                            // Jika detail_tgl kosong/tidak ada, otomatis dianggap hijau (sesuai permintaan)
-                            isMatch = true;
-                        } else {
-                            // Jika ada, bandingkan dengan tanggal yang sesuai index angsurannya
-                            const targetTgl = jadwalTanggal[item.angsuran - 1];
-                            const tglBayar = item.tgl; // Format YYYY-MM-DD
-                            isMatch = (targetTgl === tglBayar);
-                        }
-
-                        // 3. Render Icon
-                        const checkIcon = isMatch ? '<i class="bi bi-patch-check-fill text-success ms-1" title="Sesuai Jadwal"></i>' : '';
-
-                        htmlAngsuran += `
-        <tr>
-            <td><span class="badge bg-secondary">${item.angsuran}</span></td>
-            <td>
-                ${new Date(item.tgl).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'})}
-                ${checkIcon}
-            </td>
-            <td class="fw-bold text-success">
-                Rp ${parseInt(item.nominal).toLocaleString('id-ID')}
-            </td>
-            <td class="text-end">
-                <button onclick="hapusAngsuran('${item.id}')" class="btn btn-outline-danger btn-sm border-0">
-                    <i class="bi bi-trash"></i>
-                </button>
-                <button onclick="printStruk('${item.id}')" class="btn btn-outline-primary btn-sm border-0">
-                    <i class="bi bi-printer"></i>
-                </button>
-            </td>
-        </tr>`;
-                    });
-                } else {
-                    htmlAngsuran = '<tr><td colspan="4" class="text-center text-muted py-3">Belum ada catatan angsuran</td></tr>';
-                }
-                $('#list-riwayat-angsuran').html(htmlAngsuran);
-
-
-
-                // Tombol Bayar
-                let btnBayar = $('#btn-bayar-selanjutnya');
-                if (jumBayar >= totalHarus) {
-                    btnBayar.attr('disabled', true).text('PINJAMAN LUNAS').removeClass('btn-primary').addClass('btn-success');
-                } else {
-                    btnBayar.attr('disabled', false)
-                        .html(`<i class="bi bi-cash-coin me-2"></i> Bayar Angsuran Ke-${jumBayar + 1}`)
-                        .removeClass('btn-success').addClass('btn-primary')
-                        .attr('onclick', `window.location.href='/pembayaran?id_pinjam=${p.id}&ke=${jumBayar + 1}'`);
-                }
+                // 5. Render Tabel & Tombol
+                renderTabelAngsuran(a, p);
+                handleTombolBayar(p, jumBayar, targetAngsuran);
             },
             error: function() {
                 alert('Gagal mengambil data nasabah.');
@@ -344,62 +273,159 @@
             }
         });
     }
-    // ...
 
+    // --- Fungsi Render Tabel ---
+    function renderTabelAngsuran(a, p) {
+        let htmlStr = '';
+        let jadwalArr = [];
+        try { 
+            jadwalArr = typeof p.detail_tgl === 'string' ? JSON.parse(p.detail_tgl) : (p.detail_tgl || []); 
+        } catch (e) { console.error("Format jadwal salah"); }
 
-    function hapusAngsuran(id) {
+        if (a.length > 0) {
+            a.forEach((item) => {
+                let isMatch = false;
+                let tglTargetStr = "-";
+
+                // Logika Check Tanggal
+                if (jadwalArr.length > 0) {
+                    const target = jadwalArr[item.angsuran - 1];
+                    if (target) {
+                        tglTargetStr = target.split('-').reverse().join('-');
+                        const tglRiwayat = (item.tgl || "").split(' ')[0];
+                        isMatch = (target === tglRiwayat);
+                    }
+                } else { isMatch = true; }
+
+                const icon = isMatch 
+                    ? '<i class="bi bi-patch-check-fill text-success ms-1"></i>' 
+                    : `<br><small class="text-danger" style="font-size: 10px;">Harusnya: ${tglTargetStr}</small>`;
+
+                htmlStr += `
+                <tr>
+                    <td><span class="badge bg-secondary">${item.angsuran}</span></td>
+                    <td>${new Date(item.tgl).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'})} ${icon}</td>
+                    <td class="fw-bold text-success">Rp ${(parseInt(item.nominal) || 0).toLocaleString('id-ID')}</td>
+                    <td class="text-end">
+                        <button onclick="hapusAngsuran('${item.id}', '${p.id}')" class="btn btn-outline-danger btn-sm border-0"><i class="bi bi-trash"></i></button>
+                        <button onclick="printStruk('${item.id}')" class="btn btn-outline-primary btn-sm border-0"><i class="bi bi-printer"></i></button>
+                    </td>
+                </tr>`;
+            });
+        } else {
+            htmlStr = '<tr><td colspan="4" class="text-center text-muted py-3">Belum ada riwayat</td></tr>';
+        }
+        $('#list-riwayat-angsuran').html(htmlStr);
+    }
+
+    // --- Logic Tombol Bayar ---
+    function handleTombolBayar(p, jumBayar, targetAngsuran) {
+        let btn = $('#btn-bayar-selanjutnya');
+        if (jumBayar >= targetAngsuran && targetAngsuran > 0) {
+            btn.attr('disabled', true).text('PINJAMAN LUNAS').removeClass('btn-primary').addClass('btn-success').off('click');
+        } else {
+            const ke = jumBayar + 1;
+            const saranNominal = parseInt(p.nominal_angsuran) || 0;
+            btn.attr('disabled', false)
+                .html(`<i class="bi bi-cash-coin me-2"></i> Bayar Angsuran Ke-${ke}`)
+                .removeClass('btn-success').addClass('btn-primary')
+                .off('click').on('click', function() {
+                    bayarAngsuranManual(p.id, ke, saranNominal);
+                });
+        }
+    }
+
+    // --- Modal Input Bayar (SweetAlert2) ---
+    function bayarAngsuranManual(id_pinjam, ke, nominal) {
+        const tglSkrg = new Date();
+        tglSkrg.setMinutes(tglSkrg.getMinutes() - tglSkrg.getTimezoneOffset());
+        const waktuDefault = tglSkrg.toISOString().slice(0, 16);
+
         Swal.fire({
-            title: 'Hapus Angsuran?',
-            text: "Data yang dihapus tidak dapat dikembalikan!",
-            icon: 'warning',
+            target: document.getElementById('modalProfil'),
+            title: `Bayar Angsuran Ke-${ke}`,
+            html: `
+                <div class="text-start">
+                    <label class="form-label fw-bold">Nominal Pembayaran</label>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text bg-light">Rp</span>
+                        <input type="text" id="swal-mask" class="form-control" value="${parseInt(nominal).toLocaleString('id-ID')}">
+                        <input type="hidden" id="swal-real" value="${nominal}">
+                    </div>
+                    <label class="form-label fw-bold">Status</label>
+                    <select id="swal-status" class="form-select mb-3">
+                        <option value="LUNAS">LUNAS</option>
+                        <option value="TIDAK">TIDAK</option>
+                    </select>
+                    <label class="form-label fw-bold">Waktu Bayar</label>
+                    <input type="datetime-local" id="swal-tgl" class="form-control" value="${waktuDefault}">
+                </div>`,
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Ya, Hapus!',
-            cancelButtonText: 'Batal'
+            confirmButtonText: 'Simpan & Cetak',
+            didOpen: () => {
+                const m = Swal.getPopup().querySelector('#swal-mask');
+                const r = Swal.getPopup().querySelector('#swal-real');
+                m.focus();
+                m.addEventListener('input', function() {
+                    let v = this.value.replace(/[^0-9]/g, '');
+                    r.value = v;
+                    this.value = v ? parseInt(v).toLocaleString('id-ID') : '';
+                });
+            },
+            preConfirm: () => {
+                return {
+                    id_pinjam: id_pinjam,
+                    nominal: $('#swal-real').val(),
+                    tgl: $('#swal-tgl').val(),
+                    angsuran: ke,
+                    status: $('#swal-status').val()
+                }
+            }
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    // Sesuaikan URL dengan route di atas
-                    url: "{{ url('/angsuran/delete') }}/" + id,
-                    method: "DELETE",
-                    data: {
-                        // WAJIB sertakan CSRF Token Laravel
-                        "_token": "{{ csrf_token() }}"
-                    },
+                    url: "{{ route('angsuran.store') }}",
+                    method: "POST",
+                    data: { ...result.value, _token: "{{ csrf_token() }}" },
                     success: function(res) {
-                        if (res.success) {
-                            Swal.fire('Berhasil!', res.message, 'success').then(() => {
-                                // Tutup modal profil jika sedang terbuka
-                                $('#modalProfil').modal('hide');
-                                // Refresh halaman atau panggil ulang fungsi showProfil(id_pinjam)
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire('Gagal!', res.message, 'error');
-                        }
-                    },
-                    error: function(xhr) {
-                        Swal.fire('Error!', 'Terjadi kesalahan pada server.', 'error');
+                        Swal.fire('Berhasil!', 'Mencetak struk...', 'success').then(() => {
+                            if(res.id_angsuran) printStruk(res.id_angsuran);
+                            showProfil(id_pinjam); // Refresh data tanpa reload
+                        });
                     }
                 });
             }
         });
     }
 
-    // function printStruk(id) {
-    //     // Membuka halaman cetak di tab baru
-    //     window.open("/admin/angsuran/print/" + id, "_blank");
-    // }
+    // --- Helper Maps & Struk ---
+    function handleMaps(n) {
+        if (n.lat && n.lng && n.lat !== "0") {
+            $('#container-maps').removeClass('d-none');
+            setTimeout(() => {
+                if (mapProfil) mapProfil.remove();
+                mapProfil = L.map('map').setView([n.lat, n.lng], 15);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapProfil);
+                L.marker([n.lat, n.lng]).addTo(mapProfil).bindPopup(n.nama);
+            }, 400);
+        } else { $('#container-maps').addClass('d-none'); }
+    }
 
+    function hapusAngsuran(id, id_pinjam) {
+        Swal.fire({ title: 'Hapus?', icon: 'warning', showCancelButton: true }).then((r) => {
+            if (r.isConfirmed) {
+                $.ajax({
+                    url: "{{ url('/angsuran/delete') }}/" + id,
+                    method: "DELETE",
+                    data: { "_token": "{{ csrf_token() }}" },
+                    success: function() { showProfil(id_pinjam); }
+                });
+            }
+        });
+    }
 
-    function printStruk(id_angsuran) {
-        if (!id_angsuran) return;
-
-        // URL manual sesuai dengan localhost Anda
-        const url = "{{ url('/angsuran/printstruk') }}/" + id_angsuran;
-
-        window.open(url, '_blank');
+    function printStruk(id) {
+        window.open("{{ url('/angsuran/printstruk') }}/" + id, '_blank');
     }
 </script>
 @endsection

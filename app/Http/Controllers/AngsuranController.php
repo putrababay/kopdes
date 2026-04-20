@@ -141,34 +141,139 @@ class AngsuranController extends Controller
         return $number;
     }
 
+    // public function destroy($id)
+    // {
+    //     try {
+    //         // 1. Cari data angsuran berdasarkan ID
+    //         $angsuran = DB::table('angsuran')->where('id', $id)->first();
+
+    //         // 2. Jika data tidak ditemukan
+    //         if (!$angsuran) {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'Data angsuran tidak ditemukan.'
+    //             ], 404);
+    //         }
+
+    //         // 3. Proses Hapus
+    //         DB::table('angsuran')->where('id', $id)->delete();
+
+    //         // 4. Berikan respon sukses ke SweetAlert
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => 'Data angsuran berhasil dihapus.'
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         // Tangani jika ada error database
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Gagal menghapus data: ' . $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
+
     public function destroy($id)
-    {
-        try {
-            // 1. Cari data angsuran berdasarkan ID
-            $angsuran = DB::table('angsuran')->where('id', $id)->first();
+{
+    // Menggunakan Transaction agar jika salah satu gagal, semua dibatalkan
+    DB::beginTransaction();
 
-            // 2. Jika data tidak ditemukan
-            if (!$angsuran) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Data angsuran tidak ditemukan.'
-                ], 404);
-            }
+    try {
+        // 1. Cari data angsuran berdasarkan ID sebelum dihapus untuk mendapatkan id_pinjam
+        $angsuran = DB::table('angsuran')->where('id', $id)->first();
 
-            // 3. Proses Hapus
-            DB::table('angsuran')->where('id', $id)->delete();
-
-            // 4. Berikan respon sukses ke SweetAlert
-            return response()->json([
-                'success' => true,
-                'message' => 'Data angsuran berhasil dihapus.'
-            ]);
-        } catch (\Exception $e) {
-            // Tangani jika ada error database
+        // 2. Jika data tidak ditemukan
+        if (!$angsuran) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menghapus data: ' . $e->getMessage()
-            ], 500);
+                'message' => 'Data angsuran tidak ditemukan.'
+            ], 404);
         }
+
+        $id_pinjam = $angsuran->id_pinjam;
+
+        // 3. Proses Hapus data angsuran
+        DB::table('angsuran')->where('id', $id)->delete();
+
+        /**
+         * LOGIKA UPDATE STATUS PINJAMAN
+         */
+        
+        // 4. Ambil target total angsuran dari tabel nasabah_pinjam
+        $pinjam = DB::table('nasabah_pinjam')->where('id', $id_pinjam)->first();
+        
+        if ($pinjam) {
+            // 5. Hitung jumlah angsuran yang tersisa di database untuk pinjaman ini
+            $sisaAngsuran = DB::table('angsuran')->where('id_pinjam', $id_pinjam)->count();
+
+            // 6. Jika jumlah angsuran sekarang lebih kecil dari target seharusnya, 
+            //    maka status pinjaman harus AKTIF (bukan LUNAS lagi)
+            if ($sisaAngsuran < $pinjam->angsuran) {
+                DB::table('nasabah_pinjam')
+                    ->where('id', $id_pinjam)
+                    ->update(['status' => 'AKTIF']);
+            }
+        }
+
+        // Simpan semua perubahan
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data angsuran dihapus dan status pinjaman diperbarui.'
+        ]);
+
+    } catch (\Exception $e) {
+        // Batalkan perubahan jika terjadi error
+        DB::rollBack();
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal menghapus data: ' . $e->getMessage()
+        ], 500);
     }
+}
+
+
+    public function store(Request $request)
+{
+    DB::beginTransaction();
+    try {
+        // 1. Simpan data angsuran dengan status default LUNAS
+        DB::table('angsuran')->insert([
+            'id_pinjam' => $request->id_pinjam,
+            'nominal'   => $request->nominal,
+            'tgl'       => $request->tgl, // Menerima format YYYY-MM-DD HH:mm:ss
+            'angsuran'  => $request->angsuran,
+            'status'    => $request->status ?? 'LUNAS'
+        ]);
+
+        // 2. Ambil info pinjaman
+        $pinjam = DB::table('nasabah_pinjam')->where('id', $request->id_pinjam)->first();
+
+        if ($pinjam) {
+            // 3. Hitung jumlah angsuran yang sudah dibayar
+            $jumlahAngsuranSekarang = DB::table('angsuran')
+                                        ->where('id_pinjam', $request->id_pinjam)
+                                        ->count();
+
+            // 4. Jika jumlah pembayaran sudah sesuai/melebihi target angsuran di master
+            if ($jumlahAngsuranSekarang >= $pinjam->angsuran) {
+                DB::table('nasabah_pinjam')
+                    ->where('id', $request->id_pinjam)
+                    ->update(['status' => 'LUNAS']);
+            }
+        }
+
+        DB::commit();
+        return response()->json(['success' => true, 'message' => 'Pembayaran angsuran berhasil disimpan.']);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'success' => false, 
+            'message' => 'Gagal menyimpan pembayaran: ' . $e->getMessage()
+        ], 500);
+    }
+}
 }
