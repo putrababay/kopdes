@@ -57,7 +57,6 @@
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 <div class="container-fluid pb-5">
     <div class="sticky-filter border-bottom mb-3">
         <form action="{{ route('angsuran.index') }}" method="GET" id="form-filter">
@@ -70,7 +69,19 @@
                     </select>
                 </div>
                 <div class="col-8">
-                    <input type="text" name="search" class="form-control border-0 bg-light" placeholder="Cari nasabah..." value="{{ request('search') }}">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control border-0 bg-light" placeholder="Cari nasabah..." value="{{ request('search') }}">
+
+                        @if(request('search'))
+                        <a href="{{ route('angsuran.index', ['hari' => $harifilter]) }}" class="btn btn-light border-0 text-muted" title="Bersihkan Pencarian">
+                            <i class="bi bi-x-circle-fill"></i>
+                        </a>
+                        @endif
+
+                        <button class="btn btn-light border-0" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </form>
@@ -314,6 +325,8 @@
                 }
                 $('#list-riwayat-angsuran').html(htmlAngsuran);
 
+
+
                 // Tombol Bayar
                 let btnBayar = $('#btn-bayar-selanjutnya');
                 if (jumBayar >= totalHarus) {
@@ -333,8 +346,60 @@
     }
     // ...
 
+
+    function hapusAngsuran(id) {
+        Swal.fire({
+            title: 'Hapus Angsuran?',
+            text: "Data yang dihapus tidak dapat dikembalikan!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    // Sesuaikan URL dengan route di atas
+                    url: "{{ url('/angsuran/delete') }}/" + id,
+                    method: "DELETE",
+                    data: {
+                        // WAJIB sertakan CSRF Token Laravel
+                        "_token": "{{ csrf_token() }}"
+                    },
+                    success: function(res) {
+                        if (res.success) {
+                            Swal.fire('Berhasil!', res.message, 'success').then(() => {
+                                // Tutup modal profil jika sedang terbuka
+                                $('#modalProfil').modal('hide');
+                                // Refresh halaman atau panggil ulang fungsi showProfil(id_pinjam)
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Gagal!', res.message, 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        Swal.fire('Error!', 'Terjadi kesalahan pada server.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    // function printStruk(id) {
+    //     // Membuka halaman cetak di tab baru
+    //     window.open("/admin/angsuran/print/" + id, "_blank");
+    // }
+
+
     function printStruk(id_angsuran) {
-        window.open("{{ url('print-angsuran') }}/" + id_angsuran, '_blank');
+        if (!id_angsuran) return;
+
+        // URL manual sesuai dengan localhost Anda
+        const url = "{{ url('/angsuran/printstruk') }}/" + id_angsuran;
+
+        window.open(url, '_blank');
     }
 </script>
 @endsection

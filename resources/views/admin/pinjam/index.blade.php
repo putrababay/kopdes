@@ -80,6 +80,7 @@
                                     <thead class="bg-light text-muted">
                                         <tr>
                                             <th class="ps-3">No</th>
+                                            <th class="fw-bold">kode</th>
                                             <th>Nominal Pinjam</th>
                                             <th>Angs</th>
                                             <th>Total Pinjaman</th>
@@ -92,7 +93,8 @@
                                     <tbody>
                                         @foreach($n->pinjamans as $key => $p)
                                         <tr>
-                                            <td class="ps-3 text-muted">{{ $key + 1 }}</td>
+                                            <td class="ps-3 text-muted">{{ $key + 1 }} </td>
+                                            <td class="fw-bold">#{{ $p->id }}</td>
                                             <td class="fw-bold">Rp{{ number_format($p->pinjam, 0, ',', '.') }}</td>
                                             <td>{{ number_format($p->angsuran, 0, ',', '.') }}</td>
                                             <td class="fw-bold">Rp{{ number_format($p->t_pinjam, 0, ',', '.') }}</td>

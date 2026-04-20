@@ -79,7 +79,7 @@
 
                                 <div class="col-md-12">
                                     <label class="form-label small fw-bold">Jaminan</label>
-                                    <input type="text" name="jaminan" id="jaminan" class="form-control bg-light border-0" placeholder="Jaminan (misal: BPKB, Sertifikat, dll.)">
+                                    <input type="text" name="jaminan" id="jaminan" class="form-control bg-light border-0" placeholder="Jaminan (misal: BPKB, Sertifikat, dll.)" required>
                                 </div>
 
                                 <div class="col-6">

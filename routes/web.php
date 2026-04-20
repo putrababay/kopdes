@@ -42,10 +42,15 @@ Route::post('/angsuran', [AngsuranController::class, 'store'])->name('angsuran.s
 Route::post('/angsuran/{id}', [AngsuranController::class, 'update'])->name('angsuran.update');
 Route::delete('/angsuran/{id}', [AngsuranController::class, 'destroy'])->name('angsuran.destroy');
 Route::get('/angsuran/detail/{id}', [AngsuranController::class, 'getDetailNasabah'])->name('angsuran.get-detail-nasabah');
+// Hapus prefix 'admin' jika di JS Anda tidak memakainya
+// Sesuaikan URI dengan URL yang Anda panggil di browser
+Route::get('/angsuran/printstruk/{id}', [App\Http\Controllers\AngsuranController::class, 'printStruk'])->name('angsuran.print');
+
+// Route untuk hapus (SweetAlert)
+Route::delete('/angsuran/delete/{id}', [AngsuranController::class, 'destroy'])->name('admin.angsuran.delete');
 
 
-
-route::resource('pulsa', PulsaController::class);
+Route::resource('pulsa', PulsaController::class);
 Route::get('/pulsa', [PulsaController::class, 'index'])->name('pulsa.index');
 Route::post('/pulsa', [PulsaController::class, 'store'])->name('pulsa.store');
 Route::post('/pulsa/{id}', [PulsaController::class, 'update'])->name('pulsa.update');
