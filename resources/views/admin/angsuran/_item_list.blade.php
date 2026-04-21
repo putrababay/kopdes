@@ -16,7 +16,14 @@
             </div>
 
             <div class="flex-grow-1 ms-3">
-                <h6 class="mb-0 fw-bold text-dark">{{ $n->nama }}</h6>
+                <div class="d-flex align-items-center">
+                    <h6 class="mb-0 fw-bold text-dark">{{ $n->nama }}</h6>
+                    {{-- Icon Checklist Hijau jika sudah bayar --}}
+                    @if(isset($n->sudah_bayar) && $n->sudah_bayar > 0)
+                        <i class="bi bi-check-circle-fill text-success ms-2" title="Sudah Bayar Hari Ini"></i>
+                    @endif
+                </div>
+                
                 <div class="text-muted small text-truncate" style="max-width: 150px;">
                     <i class="bi bi-geo-alt-fill text-danger" style="font-size: 0.75rem;"></i>
                     {{ $n->lokasi_penarikan ?? 'Lokasi tidak set' }}

@@ -6,7 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NasabahController;
 use App\Http\Controllers\PinjamController;
 use App\Http\Controllers\AngsuranController;
-use App\Http\Controllers\PulsaController;
+use App\Http\Controllers\PulsaPinjamController;
 
 
 Route::get('/', function () {
@@ -50,8 +50,14 @@ Route::get('/angsuran/printstruk/{id}', [App\Http\Controllers\AngsuranController
 Route::delete('/angsuran/delete/{id}', [AngsuranController::class, 'destroy'])->name('admin.angsuran.delete');
 
 
-Route::resource('pulsa', PulsaController::class);
-Route::get('/pulsa', [PulsaController::class, 'index'])->name('pulsa.index');
-Route::post('/pulsa', [PulsaController::class, 'store'])->name('pulsa.store');
-Route::post('/pulsa/{id}', [PulsaController::class, 'update'])->name('pulsa.update');
-Route::delete('/pulsa/{id}', [PulsaController::class, 'destroy'])->name('pulsa.destroy');
+
+    // Pastikan tidak ada typo pada kata 'pulsa'
+    Route::get('/pulsa', [PulsaPinjamController::class, 'index'])->name('pulsa.index');
+    // Route Utama untuk Tampilan dan Lazy Load
+    // Route CRUD (Create, Update, Delete) via AJAX
+    Route::post('/pulsa/store', [PulsaPinjamController::class, 'store'])->name('pulsa.store');
+    Route::put('/pulsa/update/{id}', [PulsaPinjamController::class, 'update'])->name('pulsa.update');
+    Route::delete('/pulsa/delete/{id}', [PulsaPinjamController::class, 'destroy'])->name('pulsa.destroy');
+
+    // Route Tambahan (Opsional) untuk ambil data spesifik nasabah jika dibutuhkan di modal
+    Route::get('/pulsa-pinjam/nasabah', [PulsaPinjamController::class, 'getNasabah'])->name('pulsa.nasabah');

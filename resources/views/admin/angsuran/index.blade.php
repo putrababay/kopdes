@@ -62,7 +62,8 @@
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<div class="container-fluid pb-5">
+
+
     <div class="sticky-filter border-bottom mb-3">
         <form action="{{ route('angsuran.index') }}" method="GET" id="form-filter">
             <div class="row g-2 px-2">
@@ -92,14 +93,14 @@
         </form>
     </div>
 
-    <div id="nasabah-container" class="row g-3 px-2">
+    <div id="nasabah-container" class="row g-1 px-1">
         @include('admin.angsuran._item_list')
     </div>
 
     <div id="loading" class="text-center my-4 d-none">
         <div class="spinner-border text-primary" role="status"></div>
     </div>
-</div>
+
 
 <div class="modal fade" id="modalProfil" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen-sm-down modal-lg">

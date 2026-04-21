@@ -40,5 +40,16 @@ public function pinjamans() {
     return $this->hasMany(Pinjam::class, 'id_nasaba');
 }
 
+// app/Models/Nasabah.php
+// app/Models/Nasabah.php
+
+public function pulsaPinjam()
+{
+    // Jika di database kolomnya bernama 'id_nasabah' (pakai h)
+    return $this->hasMany(MasterPulsaPinjam::class, 'id_pinjam', 'id');
+    
+    // ATAU jika di database kolomnya bernama 'nasabah_id'
+    // return $this->hasMany(MasterPulsaPinjam::class, 'nasabah_id', 'id');
+}
 
 }
