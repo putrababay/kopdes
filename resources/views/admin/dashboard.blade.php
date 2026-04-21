@@ -228,8 +228,9 @@
         </div>
     </div>
 </div>
-</div>
+
 <script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
 
 <script>
     // Live Clock
@@ -244,7 +245,8 @@
             minute: '2-digit',
             second: '2-digit'
         };
-        document.getElementById('liveClock').innerText = now.toLocaleDateString('id-ID', options);
+        const el = document.getElementById('liveClock');
+        if (el) el.innerText = now.toLocaleDateString('id-ID', options);
     }
     setInterval(updateClock, 1000);
     updateClock();
@@ -252,13 +254,25 @@
     // Auto Submit & Loading
     document.querySelectorAll('.auto-submit').forEach(select => {
         select.addEventListener('change', () => {
-            document.getElementById('loading-overlay').style.display = 'flex';
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) overlay.style.display = 'flex';
             document.getElementById('filterForm').submit();
         });
     });
 
+    // Konfigurasi Umum agar tidak mengulang settingan yang sama
+    const commonOptions = {
+        credits: {
+            enabled: false
+        },
+        accessibility: {
+            enabled: true
+        } // Sekarang aman karena modul sudah dipanggil di atas
+    };
+
     // Grafik 1: Arus Kas & Sisa
     Highcharts.chart('chartGrowth', {
+        ...commonOptions,
         chart: {
             type: 'line'
         },
@@ -277,28 +291,25 @@
             shared: true,
             valuePrefix: 'Rp'
         },
-        credits: {
-            enabled: false
-        },
-        // Grafik 1
         series: [{
             name: 'Pemasukan',
             color: '#1cc88a',
-            data: @json($data['chart_masuk']) // Jauh lebih aman dan bersih
+            data: @json($data['chart_masuk'] ?? [])
         }, {
             name: 'Pengeluaran',
             color: '#e74a3b',
-            data: @json($data['chart_keluar'])
+            data: @json($data['chart_keluar'] ?? [])
         }, {
             name: 'Sisa/Margin',
             color: '#f6c23e',
             dashStyle: 'dot',
-            data: @json($data['chart_sisa'])
+            data: @json($data['chart_sisa'] ?? [])
         }]
     });
 
-    // Grafik 2: Jumlah Pinjaman (Bar Horizontal)
+    // Grafik 2: Jumlah Pinjaman
     Highcharts.chart('chartPinjam', {
+        ...commonOptions,
         chart: {
             type: 'bar'
         },
@@ -320,14 +331,10 @@
                 }
             }
         },
-        credits: {
-            enabled: false
-        },
-        // Grafik 2
         series: [{
             name: 'Transaksi',
             color: '#4e73df',
-            data: @json($data['chart_count_pinjam'])
+            data: @json($data['chart_count_pinjam'] ?? [])
         }]
     });
 </script>
