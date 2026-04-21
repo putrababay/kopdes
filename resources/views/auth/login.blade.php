@@ -237,50 +237,50 @@
 </head>
 
 <body>
-    <div class="login-container">
-        <div class="login-header">
-            <img src="{{ asset('images/logo-small.png') }}" alt="Logo Koperasi">
-            <h4>SISTEM INFORMASI KOPERASI</h4>
-            <p>Masukkan akun Anda untuk mengakses sistem</p>
-        </div>
+	<div class="login-container">
+		<div class="login-header">
+			<img src="{{ ('images/logo-small.png') }}" alt="Logo Koperasi">
+			<h4>SISTEM INFORMASI KOPERASI</h4>
+			<p>Masukkan akun Anda untuk mengakses sistem</p>
+		</div>
 
-        <div class="login-body">
-            {{-- Notifikasi Error --}}
-            @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
+		<div class="login-body">
+			{{-- Notifikasi Error --}}
+			@if(session('error'))
+			<div class="alert alert-danger alert-dismissible fade show" role="alert">
+				<i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+				<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+			</div>
+			@endif
 
-            <form action="{{ route('login.post') }}" method="POST">
-                @csrf {{-- WAJIB di Laravel --}}
-                <div class="mb-4">
-                    <label for="username" class="form-label fw-medium">Username</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light"><i class="fas fa-user"></i></span>
-                        <input type="text" class="form-control" name="username" placeholder="Masukkan username" required value="{{ old('username') }}">
-                    </div>
-                </div>
+			<form action="{{ route('login.post') }}" method="POST">
+				@csrf {{-- WAJIB di Laravel --}}
+				<div class="mb-4">
+					<label for="username" class="form-label fw-medium">Username</label>
+					<div class="input-group">
+						<span class="input-group-text bg-light"><i class="fas fa-user"></i></span>
+						<input type="text" class="form-control" name="username" placeholder="Masukkan username" required value="{{ old('username') }}">
+					</div>
+				</div>
 
-                <div class="mb-4">
-                    <label for="password" class="form-label fw-medium">Password</label>
-                    <div class="input-group">
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Masukkan password" required>
-                        <span class="input-group-text bg-light" id="togglePassword" style="cursor: pointer;">
-                            <i class="fas fa-eye" id="eyeIcon"></i>
-                        </span>
-                    </div>
-                </div>
+				<div class="mb-4">
+					<label for="password" class="form-label fw-medium">Password</label>
+					<div class="input-group">
+						<input type="password" class="form-control" id="password" name="password" placeholder="Masukkan password" required>
+						<span class="input-group-text bg-light" id="togglePassword" style="cursor: pointer;">
+							<i class="fas fa-eye" id="eyeIcon"></i>
+						</span>
+					</div>
+				</div>
 
-                <button type="submit" class="btn btn-primary btn-login mb-3">
-                    <i class="fas fa-sign-in-alt me-2"></i>MASUK
-                </button>
-            </form>
-        </div>
-    </div>
+				<button type="submit" class="btn btn-primary btn-login mb-3">
+					<i class="fas fa-sign-in-alt me-2"></i>MASUK
+				</button>
+			</form>
+		</div>
+	</div>
 
-   <!-- Bootstrap 5 JS Bundle with Popper -->
+	<!-- Bootstrap 5 JS Bundle with Popper -->
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 	<!-- Password Toggle Script -->
@@ -319,4 +319,5 @@
 		});
 	</script>
 </body>
+
 </html>
