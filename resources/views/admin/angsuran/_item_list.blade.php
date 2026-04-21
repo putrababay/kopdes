@@ -22,6 +22,9 @@
                     {{ $n->lokasi_penarikan ?? 'Lokasi tidak set' }}
                 </div>
                 <div class="mt-1">
+                    <span class="badge rounded-pill bg-light text-success border-success border" style="font-size: 0.65rem;">
+                        Rp. {{ number_format($n->t_pinjam, 0, ',', '.') }}
+                    </span>
                     <span class="badge rounded-pill bg-light text-primary border-primary border" style="font-size: 0.65rem;">
                         Tenor: {{ $n->angsuran }}x
                     </span>
@@ -34,7 +37,7 @@
                 </div>
                 <div class="d-flex flex-column align-items-end gap-1">
                     <span class="badge bg-primary bg-opacity-75 text-white px-2 py-1" style="font-size: 0.7rem;">
-                        {{ $n->tempo_hari }}
+                        {{ date('d-m-Y', strtotime($n->tgl_pinjam)) }}
                     </span>
                     <span class="badge bg-light text-dark border small px-2 py-1" style="font-size: 0.65rem;">
                         ID: #{{ $n->id }}

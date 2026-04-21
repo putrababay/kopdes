@@ -1,12 +1,98 @@
 @extends('layouts.admin')
 
 @section('content')
+<style>
+    /* Global & Variables */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%);
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    /* Avatar Styling */
+    .avatar-wrapper {
+        width: 55px;
+        height: 55px;
+        flex-shrink: 0;
+    }
+
+    .avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border: 2px solid #fff;
+    }
+
+    .avatar-initial {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #eef2ff;
+        color: #0d6efd;
+        font-weight: bold;
+        border-radius: 12px;
+        font-size: 1.2rem;
+        border: 2px solid #fff;
+    }
+
+    /* Card & List Effects */
+    .nasabah-row {
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+    }
+
+    .nasabah-row:hover {
+        background-color: #f8faff !important;
+        border-color: #dee2e6;
+    }
+
+    /* Animation Chevron */
+    [data-bs-toggle="collapse"] .bi-chevron-down {
+        transition: transform 0.3s ease;
+    }
+
+    [data-bs-toggle="collapse"]:not(.collapsed) .bi-chevron-down {
+        transform: rotate(180deg);
+        color: #0d6efd;
+    }
+
+    /* Layout Toggle */
+    @media (max-width: 767.98px) {
+        .desktop-info {
+            display: none;
+        }
+
+        .mobile-info {
+            display: block;
+        }
+    }
+
+    @media (min-width: 768px) {
+        .desktop-info {
+            display: flex;
+        }
+
+        .mobile-info {
+            display: none;
+        }
+    }
+</style>
+
 
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="fw-bold text-primary">Master Pinjaman (Grouping)</h5>
-        <button class="btn btn-primary rounded-pill px-4" onclick="openModalPinjam('tambah')">
-            <i class="bi bi-plus-lg"></i> Tambah
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold text-dark mb-0">Master Pinjaman</h4>
+            <p class="text-muted small mb-0">Pinjaman nasabah tahun {{ $tahun }}</p>
+        </div>
+        <button class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold" onclick="openModalPinjam('tambah')">
+            <i class="bi bi-plus-lg me-2"></i>Tambah
         </button>
     </div>
 
@@ -14,26 +100,25 @@
         <div class="card-body p-3">
             <form action="{{ route('pinjam.index') }}" method="GET" class="row g-2">
                 <div class="col-md-3">
-                    <select name="tahun" class="form-select border-0 bg-light fw-bold" onchange="this.form.submit()">
-                        @for($i = date('Y'); $i >= 2020; $i--)
-                        <option value="{{ $i }}" {{ $tahun == $i ? 'selected' : '' }}>Tahun {{ $i }}</option>
-                        @endfor
-                    </select>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0"><i class="bi bi-calendar-check text-primary"></i></span>
+                        <select name="tahun" class="form-select border-0 bg-light fw-bold" onchange="this.form.submit()">
+                            @for($i = date('Y'); $i >= 2020; $i--)
+                            <option value="{{ $i }}" {{ $tahun == $i ? 'selected' : '' }}>Tahun {{ $i }}</option>
+                            @endfor
+                        </select>
+                    </div>
                 </div>
-
                 <div class="col-md-9">
                     <div class="input-group">
-                        <input type="text" name="search" class="form-control border-0 bg-light" placeholder="Cari Nama..." value="{{ request('search') }}">
-
-                        {{-- Tombol Reset (X Merah) --}}
+                        <input type="text" name="search" class="form-control border-0 bg-light" placeholder="Cari nama nasabah..." value="{{ request('search') }}">
                         @if(request()->filled('search'))
-                        <a href="{{ route('pinjam.index', ['tahun' => $tahun]) }}" class="btn btn-light border-0 bg-light d-flex align-items-center justify-content-center px-3" title="Hapus Pencarian">
-                            <i class="bi bi-x-lg text-danger fw-bold"></i>
+                        <a href="{{ route('pinjam.index', ['tahun' => $tahun]) }}" class="btn btn-light border-0 bg-light px-3">
+                            <i class="bi bi-x-lg text-danger"></i>
                         </a>
                         @endif
-
-                        <button type="submit" class="btn btn-primary px-4 shadow-sm">
-                            <i class="bi bi-search me-1"></i> Cari
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-search"></i>
                         </button>
                     </div>
                 </div>
@@ -41,76 +126,80 @@
         </div>
     </div>
 
-
     <div class="row g-3">
         @forelse($nasabahs as $n)
         <div class="col-12">
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                 <div class="card-body p-0">
-                    <div class="d-flex flex-column flex-md-row align-items-md-center p-3 bg-white cursor-pointer"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#detail_{{ $n->id }}"
-                        style="cursor: pointer;">
+                    <div class="d-flex align-items-center p-3 bg-white cursor-pointer nasabah-row collapsed"
+                        data-bs-toggle="collapse" data-bs-target="#detail_{{ $n->id }}">
 
                         <div class="flex-grow-1">
-                            <h6 class="fw-bold mb-1">{{ $n->nama }}</h6>
-                            <small class="text-muted d-block small">
-                                <i class="bi bi-briefcase"></i> {{ $n->pekerjaan }} |
-                                <i class="bi bi-geo-alt"></i> {{ $n->alamat }}
-                            </small>
+                            <div class="d-flex align-items-center mb-1">
+                                <h6 class="fw-bold mb-0 text-dark">{{ $n->nama }}</h6>
+                                <span class="badge bg-blue-soft text-primary rounded-pill ms-2 sm-font" style="background:#eef2ff; font-size: 0.7rem;">
+                                    {{ $n->jumlah_transaksi }}x Transaksi
+                                </span>
+                            </div>
+                            <div class="desktop-info gap-3 small text-muted">
+                                <span><i class="bi bi-briefcase me-1"></i> {{ $n->pekerjaan }}</span>
+                                <span><i class="bi bi-clock-history me-1"></i> Terakhir: <b>{{ $n->pinjaman_terakhir ?? '-' }}</b></span>
+                                <span><i class="bi bi-geo-alt me-1"></i> {{ $n->alamat }}</span>
+                            </div>
+                            <div class="mobile-info small text-muted">
+                                <span><i class="bi bi-briefcase me-1"></i> {{ Str::limit($n->pekerjaan, 40) }}</span>
+                                <div><i class="bi bi-clock-history me-1"></i> {{ $n->pinjaman_terakhir ?? '-' }}</div>
+                                <span><i class="bi bi-geo-alt me-1"></i> {{ Str::limit($n->alamat, 55) }}</span>
+                            </div>
                         </div>
 
-                        <div class="d-flex gap-4 text-md-end mt-2 mt-md-0 me-md-3">
-                            <div>
-                                <small class="text-muted d-block small">Transaksi</small>
-                                <span class="badge bg-light text-primary border rounded-pill">{{ $n->jumlah_transaksi }} Kali</span>
+                        <div class="d-flex align-items-center ms-3">
+                            <div class="avatar-wrapper me-3">
+                                @if($n->foto)
+                                <img src="{{ asset('storage/'.$n->foto) }}" class="avatar-img">
+                                @else
+                                <div class="avatar-initial">{{ substr($n->nama, 0, 1) }}</div>
+                                @endif
                             </div>
-                            <div>
-                                <small class="text-muted d-block small">Terakhir Pinjam</small>
-                                <span class="small fw-bold">{{ $n->pinjaman_terakhir ?? '-' }}</span>
-                            </div>
+                            <i class="bi bi-chevron-down text-muted"></i>
                         </div>
-                        <i class="bi bi-chevron-down text-muted"></i>
                     </div>
 
                     <div class="collapse" id="detail_{{ $n->id }}">
                         <div class="bg-light p-3 border-top">
-                            <div class="table-responsive bg-white rounded-3 shadow-sm">
-                                <table class="table table-hover align-middle mb-0" style="font-size: 0.9rem;">
-                                    <thead class="bg-light text-muted">
+                            <div class="d-none d-md-block table-responsive bg-white rounded-4 shadow-sm">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="bg-light text-muted small">
                                         <tr>
-                                            <th class="ps-3">No</th>
-                                            <th class="fw-bold">kode</th>
-                                            <th>Nominal Pinjam</th>
-                                            <th>Angs</th>
-                                            <th>Total Pinjaman</th>
-                                            <th>Tgl Pinjam</th>
-                                            <th>Tempo</th>
-                                            <th>Status</th>
-                                            <th class="text-center">Aksi</th>
+                                            <th class="ps-3">KODE</th>
+                                            <th>NOMINAL</th>
+                                            <th>ANGSURAN</th>
+                                            <th>TOTAL</th>
+                                            <th>TGL PINJAM</th>
+                                            <th>STATUS</th>
+                                            <th class="text-center">AKSI</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        @foreach($n->pinjamans as $key => $p)
+                                    <tbody class="small">
+                                        @foreach($n->pinjamans as $p)
                                         <tr>
-                                            <td class="ps-3 text-muted">{{ $key + 1 }} </td>
-                                            <td class="fw-bold">#{{ $p->id }}</td>
-                                            <td class="fw-bold">Rp{{ number_format($p->pinjam, 0, ',', '.') }}</td>
+                                            <td class="ps-3 fw-bold">#{{ $p->id }}</td>
+                                            <td class="fw-bold text-dark">Rp{{ number_format($p->pinjam, 0, ',', '.') }}</td>
                                             <td>{{ number_format($p->angsuran, 0, ',', '.') }}</td>
-                                            <td class="fw-bold">Rp{{ number_format($p->t_pinjam, 0, ',', '.') }}</td>
-                                            <td>{{ date('d-m-Y', strtotime($p->tgl_pinjam)) }}</td>
-                                            <td>{{ $p->tempo_hari }}</td>
+                                            <td class="fw-bold text-primary">Rp{{ number_format($p->t_pinjam, 0, ',', '.') }}</td>
+                                            <td>{{ date('d/m/Y', strtotime($p->tgl_pinjam)) }}</td>
                                             <td>
-                                                <span class="badge rounded-pill bg-{{ $p->status == 'LUNAS' ? 'success' : 'warning' }}">
+                                                <span class="badge rounded-pill bg-{{ $p->status == 'LUNAS' ? 'success' : 'warning' }} px-3">
                                                     {{ $p->status }}
                                                 </span>
                                             </td>
                                             <td class="text-center">
-                                                <button class="btn btn-sm btn-outline-warning"
-                                                    onclick="editPinjaman({{ $p->id }}, {{ $p->id_nasaba }}, {{ $p->pinjam }}, '{{ $p->tgl_pinjam }}', {{ $p->angsuran }}, '{{ $p->status }}', '{{ $p->tempo_hari }}', '{{ $p->lokasi_penarikan }}', '{{ $p->t_pinjam }}', '{{ $p->jaminan }}')">
-                                                    <i class="bi bi-pencil"></i>
+                                                <button class="btn btn-sm btn-light text-warning me-1"
+                                                    onclick="event.stopPropagation(); editPinjaman({{ $p->id }}, {{ $p->id_nasaba }}, {{ $p->pinjam }}, '{{ $p->tgl_pinjam }}', {{ $p->angsuran }}, '{{ $p->status }}', '{{ $p->tempo_hari }}', '{{ $p->lokasi_penarikan }}', '{{ $p->t_pinjam }}', '{{ $p->jaminan }}')">
+                                                    <i class="bi bi-pencil-square"></i>
                                                 </button>
-                                                <button class="btn btn-sm btn-outline-danger" onclick="confirmDelete('{{ $p->id }}')">
+                                                <button class="btn btn-sm btn-light text-danger"
+                                                    onclick="event.stopPropagation(); confirmDelete('{{ $p->id }}')">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </td>
@@ -119,6 +208,42 @@
                                     </tbody>
                                 </table>
                             </div>
+
+                            <div class="d-md-none">
+                                @foreach($n->pinjamans as $p)
+                                <div class="card border-0 shadow-sm rounded-3 mb-2">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="fw-bold text-primary">#{{ $p->id }}</span>
+                                            <span class="badge bg-{{ $p->status == 'LUNAS' ? 'success' : 'warning' }} rounded-pill">{{ $p->status }}</span>
+                                        </div>
+                                        <div class="row g-2 mb-2">
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">Nominal</small>
+                                                <span class="fw-bold">Rp{{ number_format($p->pinjam, 0, ',', '.') }}</span>
+                                            </div>
+                                            <div class="col-6 text-end">
+                                                <small class="text-muted d-block">Total</small>
+                                                <span class="fw-bold text-primary">Rp{{ number_format($p->t_pinjam, 0, ',', '.') }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                            <small class="text-muted"><i class="bi bi-calendar3 me-1"></i> {{ date('d/m/y', strtotime($p->tgl_pinjam)) }}</small>
+                                            <div>
+                                                <button class="btn btn-sm btn-warning text-white rounded-pill px-3"
+                                                    onclick="event.stopPropagation(); editPinjaman({{ $p->id }}, {{ $p->id_nasaba }}, {{ $p->pinjam }}, '{{ $p->tgl_pinjam }}', {{ $p->angsuran }}, '{{ $p->status }}', '{{ $p->tempo_hari }}', '{{ $p->lokasi_penarikan }}', '{{ $p->t_pinjam }}', '{{ $p->jaminan }}')">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-danger rounded-pill px-3"
+                                                    onclick="event.stopPropagation(); confirmDelete('{{ $p->id }}')">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -126,7 +251,8 @@
         </div>
         @empty
         <div class="col-12 text-center py-5">
-            <p class="text-muted">Data nasabah tidak ditemukan.</p>
+            <i class="bi bi-person-x text-muted" style="font-size: 3rem;"></i>
+            <p class="text-muted mt-2">Nasabah tidak ditemukan</p>
         </div>
         @endforelse
     </div>

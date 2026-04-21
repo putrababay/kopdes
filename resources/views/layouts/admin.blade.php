@@ -128,7 +128,7 @@
             <i class="fas fa-home"></i>
             <span>Home</span>
         </a>
-        <a href="{{ route('angsuran.index') }}" class="nav-item-mobile">
+        <a href="{{ route('angsuran.index') }}" class="nav-item-mobile {{ request()->is('angsuran') ? 'active' : '' }}">
             <i class="fas fa-wallet"></i>
             <span>Angsuran</span>
         </a>

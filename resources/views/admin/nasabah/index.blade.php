@@ -182,68 +182,80 @@
     <div class="mobile-card">
         <?php $no = 1; ?>
         @foreach($nasabah as $n)
-        <div class="card nasabah-card shadow-sm mb-3 border-start border-primary border-4">
-            <div class="card-body" style="background-color: #91cce433 !important">
-                <div class="d-flex align-items-start justify-content-between mb-3">
+        <div class="card border-0 shadow-sm mb-3 overflow-hidden" style="border-radius: 15px;">
+            <div class="bg-primary" style="height: 4px;"></div>
+
+            <div class="card-body p-3">
+                <div class="d-flex align-items-center justify-content-between mb-3">
                     <div class="d-flex align-items-center">
-                        {{-- Cek database AND cek fisik file di folder public/foto --}}
                         @if($n->foto && file_exists(public_path('foto/'.$n->foto)))
                         <img src="{{ asset('foto/'.$n->foto) }}"
-                            class="avatar-img me-3"
-                            style="cursor: pointer;"
+                            class="rounded-circle object-fit-cover border"
+                            style="width: 50px; height: 50px; cursor: pointer;"
                             onclick="previewFoto('{{ asset('foto/'.$n->foto) }}', '{{ $n->nama }}')"
                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        {{-- Onerror di atas adalah cadangan jika file_exists lolos tapi browser gagal load --}}
-                        @else
-                        <div class="avatar-initial me-3">{{ strtoupper(substr($n->nama, 0, 1)) }}</div>
                         @endif
+                        <div class="avatar-placeholder bg-light text-primary fw-bold d-flex align-items-center justify-content-center rounded-circle border"
+                            style="width: 50px; height: 50px; {{ ($n->foto && file_exists(public_path('foto/'.$n->foto))) ? 'display:none;' : '' }}">
+                            {{ strtoupper(substr($n->nama, 0, 1)) }}
+                        </div>
 
-                        <div>
-                            <h6 class="mb-0 fw-bold">{{ $n->nama }}</h6>
-                            <small class="text-primary fw-bold">{{ $n->nik }}</small>
+                        <div class="ms-3">
+                            <h6 class="mb-0 fw-bold text-dark">{{ $n->nama }}</h6>
+                            <small class="text-muted"><i class="bi bi-card-text me-1"></i>{{ $n->nik }}</small>
                         </div>
                     </div>
-                    <div class="d-flex gap-2">
-                        <label for="">{{ $no++}}</label>
+                    <span class="badge bg-light text-primary border rounded-pill">#{{ $no++ }}</span>
+                </div>
+
+                <div class="info-section bg-light p-3 rounded-3 mb-3">
+                    <div class="row g-2">
+                        <div class="col-12 d-flex align-items-center mb-1">
+                            <i class="bi bi-briefcase text-secondary me-2"></i>
+                            <span class="small text-muted me-2">Pekerjaan:</span>
+                            <span class="small fw-semibold ms-auto">{{ $n->pekerjaan ?? '-' }}</span>
+                        </div>
+                        <div class="col-12 d-flex align-items-center mb-1">
+                            <i class="bi bi-telephone text-secondary me-2"></i>
+                            <span class="small text-muted me-2">No. Telp:</span>
+                            <span class="small fw-semibold ms-auto">{{ $n->no_tlp }}</span>
+                        </div>
+                        <div class="col-12 mt-2 pt-2 border-top">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-geo-alt text-secondary me-2 mt-1"></i>
+                                <span class="small text-muted text-break">{{ $n->alamat }}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="row g-2 small border-top pt-2">
-                    <div class="col-6 text-muted">Pekerjaan:</div>
-                    <div class="col-6 text-end fw-bold">{{ $n->pekerjaan ?? '-' }}</div>
-                    <div class="col-6 text-muted">No. Telp:</div>
-                    <div class="col-6 text-end">{{ $n->no_tlp }}</div>
-                    <div class="col-12 text-end">{{ $n->alamat }}</div>
-                    <div class="mt-3 pt-2 border-top">
-                        <div class="row g-2">
-                            <div class="col-7">
-                                @if($n->lat)
-                                <a href="https://www.google.com/maps?q={{ $n->lat }},{{ $n->lng }}" target="_blank" class="btn btn-sm btn-light border text-danger w-100 py-2">
-                                    <i class="bi bi-geo-alt-fill"></i> Lokasi
-                                </a>
-                                @else
-                                <button class="btn btn-sm btn-light border w-100 py-2 disabled text-muted">
-                                    <i class="bi bi-geo-alt"></i> No Map
-                                </button>
-                                @endif
-                            </div>
-
-                            <div class="col-5">
-                                <div class="d-flex gap-1">
-                                    <button class="btn btn-warning btn-sm text-white w-100 py-2" onclick='openModal("edit", @json($n))'>
-                                        <i class="bi bi-pencil-square"></i>
-                                    </button>
-                                    <button class="btn btn-danger btn-sm w-100 py-2" onclick="confirmDelete('{{ $n->id }}')">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                <div class="row g-2">
+                    <div class="col-6">
+                        @if($n->lat)
+                        <a href="https://www.google.com/maps?q={{ $n->lat }},{{ $n->lng }}" target="_blank" class="btn btn-outline-danger btn-sm w-100 py-2 rounded-3">
+                            <i class="bi bi-map-fill me-1"></i> Lokasi
+                        </a>
+                        @else
+                        <button class="btn btn-light btn-sm w-100 py-2 rounded-3 disabled text-muted">
+                            <i class="bi bi-pin-map me-1"></i> No Map
+                        </button>
+                        @endif
+                    </div>
+                    <div class="col-3">
+                        <button class="btn btn-outline-warning btn-sm w-100 py-2 rounded-3" onclick='openModal("edit", @json($n))'>
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                    </div>
+                    <div class="col-3">
+                        <button class="btn btn-outline-danger btn-sm w-100 py-2 rounded-3" onclick="confirmDelete('{{ $n->id }}')">
+                            <i class="bi bi-trash3"></i>
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
         @endforeach
+
     </div>
 
     <div class="mt-4">{{ $nasabah->links('pagination::bootstrap-5') }}</div>

@@ -56,11 +56,9 @@
     }
 
     /* Memastikan SweetAlert selalu berada di depan modal Bootstrap manapun */
-.swal2-container {
-    z-index: 9999 !important;
-}
-
-
+    .swal2-container {
+        z-index: 9999 !important;
+    }
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -126,6 +124,14 @@
                         <h6 class="fw-bold mb-3 small text-uppercase text-muted">Detail Pinjaman</h6>
                         <div class="row g-3">
                             <div class="col-6">
+                                <small class="text-muted d-block">ID Pinjaman</small>
+                                <span id="prof-id" class="fw-bold"></span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Tanggal Pinjam</small>
+                                <span id="prof-tgl" class="fw-bold"></span>
+                            </div>
+                            <div class="col-6">
                                 <small class="text-muted d-block">Total Pinjam</small>
                                 <span id="prof-t-pinjam" class="fw-bold"></span>
                             </div>
@@ -181,7 +187,7 @@
     </div>
 </div>
 
-   <script>
+<script>
     // --- Global Variables ---
     let page = 1;
     let loading = false;
@@ -232,6 +238,8 @@
                 const a = res.angsuran;
 
                 // 1. Bind Data Identitas (Handling Null)
+                $('#prof-id').text('#' + p.id_pinjam_asli || '-');
+                $('#prof-tgl').text(p.tgl_pinjam || '-');
                 $('#prof-nama').text(n.nama || '-');
                 $('#prof-nik').text(n.nik || '-');
                 $('#prof-alamat').text(n.alamat || '-');
@@ -250,7 +258,7 @@
                 // 2. Bind Data Keuangan (Mencegah NaN)
                 const totalPinjam = parseInt(p.t_pinjam) || 0;
                 const totalBayar = parseInt(p.pembayaran) || 0; // Ambil dari p.pembayaran
-                
+
                 $('#prof-t-pinjam').text('Rp ' + totalPinjam.toLocaleString('id-ID'));
                 $('#prof-pembayaran').text('Rp ' + totalBayar.toLocaleString('id-ID'));
                 $('#prof-jaminan').text(p.jaminan || '-');
@@ -278,9 +286,11 @@
     function renderTabelAngsuran(a, p) {
         let htmlStr = '';
         let jadwalArr = [];
-        try { 
-            jadwalArr = typeof p.detail_tgl === 'string' ? JSON.parse(p.detail_tgl) : (p.detail_tgl || []); 
-        } catch (e) { console.error("Format jadwal salah"); }
+        try {
+            jadwalArr = typeof p.detail_tgl === 'string' ? JSON.parse(p.detail_tgl) : (p.detail_tgl || []);
+        } catch (e) {
+            console.error("Format jadwal salah");
+        }
 
         if (a.length > 0) {
             a.forEach((item) => {
@@ -295,11 +305,13 @@
                         const tglRiwayat = (item.tgl || "").split(' ')[0];
                         isMatch = (target === tglRiwayat);
                     }
-                } else { isMatch = true; }
+                } else {
+                    isMatch = true;
+                }
 
-                const icon = isMatch 
-                    ? '<i class="bi bi-patch-check-fill text-success ms-1"></i>' 
-                    : `<br><small class="text-danger" style="font-size: 10px;">Harusnya: ${tglTargetStr}</small>`;
+                const icon = isMatch ?
+                    '<i class="bi bi-patch-check-fill text-success ms-1"></i>' :
+                    `<br><small class="text-danger" style="font-size: 10px;">Harusnya: ${tglTargetStr}</small>`;
 
                 htmlStr += `
                 <tr>
@@ -307,7 +319,7 @@
                     <td>${new Date(item.tgl).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'})} ${icon}</td>
                     <td class="fw-bold text-success">Rp ${(parseInt(item.nominal) || 0).toLocaleString('id-ID')}</td>
                     <td class="text-end">
-                        <button onclick="hapusAngsuran('${item.id}', '${p.id}')" class="btn btn-outline-danger btn-sm border-0"><i class="bi bi-trash"></i></button>
+                        <button onclick="hapusAngsuran('${item.id}', '${p.id_pinjam_asli}')" class="btn btn-outline-danger btn-sm border-0"><i class="bi bi-trash"></i></button>
                         <button onclick="printStruk('${item.id}')" class="btn btn-outline-primary btn-sm border-0"><i class="bi bi-printer"></i></button>
                     </td>
                 </tr>`;
@@ -325,12 +337,12 @@
             btn.attr('disabled', true).text('PINJAMAN LUNAS').removeClass('btn-primary').addClass('btn-success').off('click');
         } else {
             const ke = jumBayar + 1;
-            const saranNominal = parseInt(p.nominal_angsuran) || 0;
+            const saranNominal = parseInt(p.pembayaran) || 0;
             btn.attr('disabled', false)
                 .html(`<i class="bi bi-cash-coin me-2"></i> Bayar Angsuran Ke-${ke}`)
                 .removeClass('btn-success').addClass('btn-primary')
                 .off('click').on('click', function() {
-                    bayarAngsuranManual(p.id, ke, saranNominal);
+                    bayarAngsuranManual(p.id_pinjam_asli, ke, saranNominal);
                 });
         }
     }
@@ -386,10 +398,13 @@
                 $.ajax({
                     url: "{{ route('angsuran.store') }}",
                     method: "POST",
-                    data: { ...result.value, _token: "{{ csrf_token() }}" },
+                    data: {
+                        ...result.value,
+                        _token: "{{ csrf_token() }}"
+                    },
                     success: function(res) {
                         Swal.fire('Berhasil!', 'Mencetak struk...', 'success').then(() => {
-                            if(res.id_angsuran) printStruk(res.id_angsuran);
+                            if (res.id_angsuran) printStruk(res.id_angsuran);
                             showProfil(id_pinjam); // Refresh data tanpa reload
                         });
                     }
@@ -408,17 +423,29 @@
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapProfil);
                 L.marker([n.lat, n.lng]).addTo(mapProfil).bindPopup(n.nama);
             }, 400);
-        } else { $('#container-maps').addClass('d-none'); }
+        } else {
+            $('#container-maps').addClass('d-none');
+        }
     }
 
     function hapusAngsuran(id, id_pinjam) {
-        Swal.fire({ title: 'Hapus?', icon: 'warning', showCancelButton: true }).then((r) => {
+        Swal.fire({
+            title: 'Hapus?',
+            icon: 'warning',
+            showCancelButton: true
+        }).then((r) => {
             if (r.isConfirmed) {
                 $.ajax({
                     url: "{{ url('/angsuran/delete') }}/" + id,
                     method: "DELETE",
-                    data: { "_token": "{{ csrf_token() }}" },
-                    success: function() { showProfil(id_pinjam); }
+                    data: {
+                        "_token": "{{ csrf_token() }}"
+                    },
+                    success: function() {
+                        Swal.fire('Berhasil!', 'Data berhasil dihapus...', 'success').then(() => {
+                            showProfil(id_pinjam); // Refresh data tanpa reload
+                        });
+                    }
                 });
             }
         });
