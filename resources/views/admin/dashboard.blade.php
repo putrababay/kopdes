@@ -229,8 +229,6 @@
     </div>
 </div>
 
-<script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="https://code.highcharts.com/modules/accessibility.js"></script>
 
 <script>
     // Live Clock
