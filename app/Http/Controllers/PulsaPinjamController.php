@@ -10,28 +10,58 @@ use DB;
 
 class PulsaPinjamController extends Controller
 {
-    public function index(Request $request)
-    {
-        $search = $request->input('search');
+    // public function index(Request $request)
+    // {
+    //     $search = $request->input('search');
 
-        $nasabahs = Nasabah::with(['pulsaPinjam' => function ($q) {
+    //     $nasabahs = Nasabah::with(['pulsaPinjam' => function ($q) {
+    //         $q->orderBy('jam_tgl', 'DESC');
+    //     }])
+    //         ->when($search, function ($q) use ($search) {
+    //             $q->where('nama', 'LIKE', "%{$search}%")
+    //                 ->orWhere('alamat', 'LIKE', "%{$search}%");
+    //         })
+    //         ->whereHas('pulsaPinjam')
+    //         ->orderBy('nama', 'ASC')
+    //         ->paginate(10);
+
+    //     if ($request->ajax()) {
+    //         // PENTING: Gunakan render() agar hasil view jadi string untuk append AJAX
+    //         return view('admin.pulsa._item_list', compact('nasabahs'))->render();
+    //     }
+
+    //     return view('admin.pulsa.index', compact('nasabahs'));
+    // }
+
+    public function index(Request $request)
+{
+    $search = $request->input('search');
+
+    $nasabahs = Nasabah::with(['pulsaPinjam' => function ($q) {
             $q->orderBy('jam_tgl', 'DESC');
         }])
-            ->when($search, function ($q) use ($search) {
-                $q->where('nama', 'LIKE', "%{$search}%")
-                    ->orWhere('alamat', 'LIKE', "%{$search}%");
-            })
-            ->whereHas('pulsaPinjam')
-            ->orderBy('nama', 'ASC')
-            ->paginate(10);
+        ->when($search, function ($q) use ($search) {
+            // Gunakan where nested agar OR tidak merusak query whereHas
+            $q->where(function($query) use ($search) {
+                $query->where('nama', 'LIKE', "%{$search}%")
+                      ->orWhere('alamat', 'LIKE', "%{$search}%");
+            });
+        })
+        ->whereHas('pulsaPinjam')
+        ->orderBy('nama', 'ASC')
+        ->paginate(10)
+        ->withQueryString(); // <--- Tambahkan ini agar parameter pencarian ikut ke page selanjutnya
 
-        if ($request->ajax()) {
-            // PENTING: Gunakan render() agar hasil view jadi string untuk append AJAX
-            return view('admin.pulsa._item_list', compact('nasabahs'))->render();
+    if ($request->ajax()) {
+        // Jika data kosong pada page > 1, kembalikan status 204 atau string kosong
+        if ($nasabahs->isEmpty()) {
+            return ""; 
         }
-
-        return view('admin.pulsa.index', compact('nasabahs'));
+        return view('admin.pulsa._item_list', compact('nasabahs'))->render();
     }
+
+    return view('admin.pulsa.index', compact('nasabahs'));
+}
 
     public function store(Request $request)
     {

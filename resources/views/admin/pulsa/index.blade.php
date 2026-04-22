@@ -126,17 +126,19 @@
     let loading = false;
     let hasMore = true;
 
-    // Filter & Search Function
+    // --- 1. CORE FUNCTIONS ---
+
+    // Fungsi utama memuat data (Search & Filter)
     function filterData() {
         page = 1;
         hasMore = true;
+        loading = false;
         let search = $('#searchName').val();
+
         $.ajax({
             url: "{{ route('pulsa.index') }}",
             type: "GET",
-            data: {
-                search: search
-            },
+            data: { search: search },
             beforeSend: function() {
                 $('#dataContainer').html('');
                 $('#loading').show();
@@ -144,6 +146,8 @@
             success: function(data) {
                 $('#loading').hide();
                 $('#dataContainer').html(data);
+                // Jika hasil pencarian kosong, hasMore matikan
+                if ($.trim(data) == "") hasMore = false;
             }
         });
     }
@@ -155,16 +159,25 @@
                 loading = true;
                 page++;
                 $('#loading').show();
+
                 $.ajax({
-                    url: "?page=" + page + "&search=" + $('#searchName').val(),
+                    url: "{{ route('pulsa.index') }}",
                     type: "GET",
+                    data: {
+                        page: page,
+                        search: $('#searchName').val()
+                    },
                     success: function(data) {
+                        $('#loading').hide();
                         if ($.trim(data) == "") {
                             hasMore = false;
                         } else {
                             $("#dataContainer").append(data);
-                            loading = false;
+                            loading = false; // Buka kunci untuk page berikutnya
                         }
+                    },
+                    error: function() {
+                        loading = false;
                         $('#loading').hide();
                     }
                 });
@@ -172,53 +185,45 @@
         }
     });
 
-    // CRUD Functions
+    // --- 2. CRUD FUNCTIONS ---
+
     function addPulsa() {
-        $('#id_pinjam').val(''); // Kosongkan ID agar dianggap 'Store' bukan 'Update'
+        $('#id_pinjam').val('');
         $('#formPulsa')[0].reset();
         $('#id_nasaba').val(null).trigger('change');
+        $('#status').val('').trigger('change'); // Reset status
         $('#modalTitle').text('Pinjam Pulsa Baru');
         $('#modalPulsa').modal('show');
     }
 
     function editPulsa(id, id_nasabah, nomer, harga, status) {
-        $('#modalTitle').text('Edit Pinjaman Pulsa');
-        $('#id_pinjam').val(id);
+    $('#modalTitle').text('Edit Pinjaman Pulsa');
+    $('#id_pinjam').val(id);
+    $('#id_nasaba').val(id_nasabah).trigger('change');
+    $('#nomer').val(nomer);
+    $('#harga').val(harga);
+    $('#harga_display').val(formatRupiah(harga ? harga.toString() : '0'));
 
-        // 1. Isi Select2 Nasabah
-        // trigger('change') penting agar Select2 memperbarui tampilan namanya
-        $('#id_nasaba').val(id_nasabah).trigger('change');
-
-        // 2. Isi Nomor HP
-        $('#nomer').val(nomer);
-
-        // 3. Isi Nominal Harga & Format ke Ribuan
-        // Kita isi hidden input dengan angka murni
-        $('#harga').val(harga);
-        // Kita isi display input dengan angka yang diformat titik
-        $('#harga_display').val(formatRupiah(harga.toString()));
-
-        // 4. Konversi status teks ke value (0/1)
-        let statusValue = (status === 'LUNAS') ? '1' : '0';
-        $('#status').val(statusValue);
-
-        $('#modalPulsa').modal('show');
+    // --- LOGIKA SELECTED STATUS ---
+    // Konversi ke string, hilangkan spasi, dan jadikan huruf besar untuk pengecekan
+    let s = String(status).trim().toUpperCase();
+    
+    let valToSet = "";
+    if (s === "1" || s === "LUNAS") {
+        valToSet = "1";
+    } else if (s === "0" || s === "BELUM LUNAS") {
+        valToSet = "0";
     }
 
-    // Fungsi pembantu untuk memformat angka saat Load Data Edit
-    function formatRupiah(angka) {
-        let number_string = angka.replace(/[^,\d]/g, '').toString(),
-            split = number_string.split(','),
-            sisa = split[0].length % 3,
-            rupiah = split[0].substr(0, sisa),
-            ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+    // Set nilai ke elemen select
+    $('#status').val(valToSet);
+    
+    // PENTING: Jika Anda menggunakan Select2 atau framework UI tertentu pada dropdown status, 
+    // tambahkan .trigger('change') agar tampilannya terupdate
+    $('#status').trigger('change'); 
 
-        if (ribuan) {
-            let separator = sisa ? '.' : '';
-            rupiah += separator + ribuan.join('.');
-        }
-        return rupiah;
-    }
+    $('#modalPulsa').modal('show');
+}
 
     function deletePulsa(id) {
         Swal.fire({
@@ -233,143 +238,86 @@
                 $.ajax({
                     url: "{{ url('pulsa/delete') }}/" + id,
                     type: "DELETE",
-                    data: {
-                        _token: "{{ csrf_token() }}"
-                    },
+                    data: { _token: "{{ csrf_token() }}" },
                     success: function(res) {
-                        $('#modalPulsa').modal('hide');
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil',
-                            text: 'Data telah dihapus!',
-                            timer: 1500
-                        }).then(() => {
-                            // AMBIL PARAMETER SEARCH SAAT INI DARI URL
-                            const urlParams = new URLSearchParams(window.location.search);
-                            const currentSearch = urlParams.get('search') || '';
-
-                            // Jika Anda ingin reload halaman tapi filter tetap ada:
-                            if (currentSearch !== "") {
-                                window.location.href = "{{ route('pulsa.index') }}?search=" + encodeURIComponent(currentSearch);
-                            } else {
-                                // Jika tidak ada pencarian, jalankan filterData() untuk refresh container saja
-                                if (typeof filterData === "function") {
-                                    // Reset halaman ke 1 agar data terbaru muncul di paling atas
-                                    page = 1;
-                                    document.getElementById('nasabah-container').innerHTML = '';
-                                    filterData();
-                                } else {
-                                    window.location.href = "{{ route('pulsa.index') }}";
-                                }
-                            }
-                        });
-                    },
+                        Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Data dihapus!', timer: 1000 });
+                        // Tetap di filter yang sama, refresh container
+                        filterData();
+                    }
                 });
             }
         });
     }
 
+    // --- 3. FORM SUBMIT (UPDATE & STORE) ---
+
     $('#formPulsa').on('submit', function(e) {
         e.preventDefault();
-
         let id = $('#id_pinjam').val();
         let url = id ? "{{ url('pulsa/update') }}/" + id : "{{ url('pulsa/store') }}";
         let formData = $(this).serialize();
 
-        // Jika update, tambahkan spoofing METHOD PUT
-        if (id) {
-            formData += "&_method=PUT";
-        }
+        if (id) formData += "&_method=PUT";
 
         $.ajax({
             url: url,
-            type: "POST", // Selalu POST, Laravel baca PUT dari data _method
+            type: "POST",
             data: formData,
             beforeSend: function() {
-                // Matikan tombol agar tidak double klik
                 $('#formPulsa button[type="submit"]').attr('disabled', true).text('Menyimpan...');
             },
             success: function(res) {
                 $('#modalPulsa').modal('hide');
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil',
-                    text: 'Data telah disimpan!',
-                    timer: 1500
-                }).then(() => {
-                    // AMBIL PARAMETER SEARCH SAAT INI DARI URL
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const currentSearch = urlParams.get('search') || '';
-
-                    // Jika Anda ingin reload halaman tapi filter tetap ada:
-                    if (currentSearch !== "") {
-                        window.location.href = "{{ route('pulsa.index') }}?search=" + encodeURIComponent(currentSearch);
-                    } else {
-                        // Jika tidak ada pencarian, jalankan filterData() untuk refresh container saja
-                        if (typeof filterData === "function") {
-                            // Reset halaman ke 1 agar data terbaru muncul di paling atas
-                            page = 1;
-                            document.getElementById('nasabah-container').innerHTML = '';
-                            filterData();
-                        } else {
-                            window.location.href = "{{ route('pulsa.index') }}";
-                        }
-                    }
-                });
+                Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Data disimpan!', timer: 1000 });
+                // REFRESH DATA (Pencarian tetap terjaga karena filterData mengambil nilai dari #searchName)
+                filterData();
             },
             error: function(xhr) {
-                // Tampilkan error 500 di console dan alert
-                console.error(xhr.responseText);
-                let errorMsg = xhr.responseJSON ? xhr.responseJSON.message : "Terjadi kesalahan pada server.";
-                Swal.fire('Error 500', errorMsg, 'error');
+                let errorMsg = xhr.responseJSON ? xhr.responseJSON.message : "Terjadi kesalahan.";
+                Swal.fire('Error', errorMsg, 'error');
             },
             complete: function() {
-                // Hidupkan kembali tombol
                 $('#formPulsa button[type="submit"]').attr('disabled', false).text('Simpan Data');
             }
         });
     });
 
+    // --- 4. HELPERS & INITIALIZERS ---
+
+    function formatRupiah(angka) {
+        if (!angka) return '0';
+        let number_string = angka.replace(/[^,\d]/g, '').toString(),
+            split = number_string.split(','),
+            sisa = split[0].length % 3,
+            rupiah = split[0].substr(0, sisa),
+            ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+        if (ribuan) {
+            let separator = sisa ? '.' : '';
+            rupiah += separator + ribuan.join('.');
+        }
+        return rupiah;
+    }
+
     $(document).ready(function() {
-        // Inisialisasi saat modal ditampilkan
+        // Init Select2 Nasabah
         $('#modalPulsa').on('shown.bs.modal', function() {
             $('.select2-nasabah').select2({
                 theme: 'bootstrap-5',
                 placeholder: "Cari Nama Nasabah...",
                 allowClear: true,
                 width: '100%',
-                dropdownParent: $('#modalPulsa') // PENTING: Agar input search bisa diketik
+                dropdownParent: $('#modalPulsa')
             });
         });
 
-        // Reset select2 saat modal ditutup
-        $('#modalPulsa').on('hidden.bs.modal', function() {
-            $('.select2-nasabah').val(null).trigger('change');
+        // Money Masking
+        $('#harga_display').on('keyup', function() {
+            let val = this.value;
+            this.value = formatRupiah(val);
+            $('#harga').val(val.replace(/\./g, ''));
         });
     });
-
-    const hargaDisplay = document.getElementById('harga_display');
-    const hargaReal = document.getElementById('harga');
-
-    hargaDisplay.addEventListener('keyup', function(e) {
-        // Hilangkan semua karakter selain angka
-        let number_string = this.value.replace(/[^,\d]/g, '').toString();
-        let split = number_string.split(',');
-        let sisa = split[0].length % 3;
-        let rupiah = split[0].substr(0, sisa);
-        let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-
-        if (ribuan) {
-            let separator = sisa ? '.' : '';
-            rupiah += separator + ribuan.join('.');
-        }
-
-        // Tampilkan format titik ke user
-        this.value = rupiah;
-        // Masukkan angka asli ke hidden input (untuk dikirim ke Controller)
-        hargaReal.value = number_string.replace(/\./g, '');
-    });
 </script>
-
 
 @endsection
