@@ -7,11 +7,11 @@ use App\Models\Nasabah;
 use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\Controller;
 
-
 class AuthController extends Controller
 {
     public function showLogin()
     {
+        // Cek jika sudah login
         if (Session::has('nik')) {
             return redirect()->route('dashboard');
         }
@@ -25,27 +25,41 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        // Mencari user sesuai logika native: username, password (plain), dan level ADMIN
+        // Cari user berdasarkan username dan level saja
         $user = Nasabah::where('username', $request->username)
-                        ->where('password', $request->password)
-                        ->where('level', 'ADMIN')
-                        ->first();
+            ->where('level', 'ADMIN')
+            ->first();
 
-        if ($user) {
-            // Set session mirip dengan native $_SESSION
+        // Verifikasi User ada DAN password cocok
+        // Jika password di database masih plain, gunakan: if ($user && $user->password == $request->password)
+        // Jika sudah di-hash (disarankan), gunakan Hash::check:
+        if ($user && $user->password == $request->password) {
+
+            // Set session
             Session::put('nik', $user->nik);
             Session::put('nama', $user->nama);
             Session::put('level', $user->level);
 
+            // Regenerate session ID untuk mencegah Session Fixation (Keamanan tambahan)
+            $request->session()->regenerate();
+
             return redirect()->route('dashboard');
         }
 
-        return back()->with('error', 'Login gagal, harap periksa username dan password Anda');
+        // Jika gagal, kembali dengan input username agar user tidak perlu ngetik ulang
+        return back()->with('error', 'Login gagal, harap periksa username dan password Anda')
+            ->withInput($request->only('username'));
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
+        // Hapus session spesifik atau semuanya
         Session::flush();
+
+        // Invalidasi session agar tidak bisa dipakai lagi
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
         return redirect()->route('login');
     }
 }

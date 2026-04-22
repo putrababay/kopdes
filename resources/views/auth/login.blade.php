@@ -24,15 +24,18 @@
 	<meta name="twitter:image" content="{{ asset('images/logo-ab.png') }}">
 
 	<link rel="icon" type="image/png" href="{{ asset('images/logo-ab.png') }}">
-	<link rel="icon" type="image/png" href="{{ asset('images/logo-ab.png') }}">
 
-	<!-- Bootstrap 5 CSS -->
+	<link rel="manifest" href="{{ asset('manifest.json') }}">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+	<meta name="apple-mobile-web-app-title" content="Kopdes">
+	<meta name="mobile-web-app-capable" content="yes">
+
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-	<!-- Font Awesome -->
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-	<!-- Google Fonts -->
 	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 	<style>
@@ -273,7 +276,7 @@
 			@endif
 
 			<form action="{{ route('login.post') }}" method="POST">
-				@csrf {{-- WAJIB di Laravel --}}
+				@csrf
 				<div class="mb-4">
 					<label for="username" class="form-label fw-medium">Username</label>
 					<div class="input-group">
@@ -285,8 +288,9 @@
 				<div class="mb-4">
 					<label for="password" class="form-label fw-medium">Password</label>
 					<div class="input-group">
+						<span class="input-group-text bg-light"><i class="fas fa-lock"></i></span>
 						<input type="password" class="form-control" id="password" name="password" placeholder="Masukkan password" required>
-						<span class="input-group-text bg-light" id="togglePassword" style="cursor: pointer;">
+						<span class="input-group-text bg-light" id="togglePassword">
 							<i class="fas fa-eye" id="eyeIcon"></i>
 						</span>
 					</div>
@@ -295,46 +299,131 @@
 				<button type="submit" class="btn btn-primary btn-login mb-3">
 					<i class="fas fa-sign-in-alt me-2"></i>MASUK
 				</button>
+
+				<div id="installApp" class="mt-3 text-center" style="display: none;">
+					<button type="button" class="btn btn-outline-primary rounded-pill w-100" id="btnInstall">
+						<i class="bi bi-download me-2"></i> Instal Aplikasi Koperasi
+					</button>
+				</div>
 			</form>
 		</div>
 	</div>
 
-	<!-- Bootstrap 5 JS Bundle with Popper -->
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-	<!-- Password Toggle Script -->
 	<script>
+		// --- 1. Inisialisasi Variabel Global ---
+
+		let deferredPrompt;
+		const installBox = document.getElementById('installApp');
+		const btnInstall = document.getElementById('btnInstall');
+
+		console.log("Script PWA berjalan, menunggu event...");
+
+		window.addEventListener('beforeinstallprompt', (e) => {
+			console.log("Event beforeinstallprompt TERDETEKSI!");
+			e.preventDefault();
+			deferredPrompt = e;
+
+			// Paksa munculkan div
+			installBox.style.setProperty('display', 'block', 'important');
+		});
+
+
+		// --- 2. Registrasi Service Worker (PWA) ---
+		if ('serviceWorker' in navigator) {
+			window.addEventListener('load', () => {
+				navigator.serviceWorker.register("{{ asset('sw.js') }}")
+					.then(reg => console.log("SW Berhasil Terdaftar"))
+					.catch(err => console.error("SW Gagal:", err));
+			});
+		}
+
+		// // --- 3. Logika Instalasi PWA ---
+		// window.addEventListener('beforeinstallprompt', (e) => {
+		// 	// Mencegah browser memunculkan prompt otomatis
+		// 	e.preventDefault();
+		// 	// Simpan event agar bisa dipicu nanti via tombol
+		// 	deferredPrompt = e;
+		// 	// Tampilkan tombol instalasi kita
+		// 	if (installBox) {
+		// 		installBox.style.setProperty('display', 'block', 'important');
+		// 	}
+		// 	console.log("PWA siap diinstal");
+		// });
+
+		if (btnInstall) {
+			btnInstall.addEventListener('click', async () => {
+				if (deferredPrompt) {
+					deferredPrompt.prompt();
+					const {
+						outcome
+					} = await deferredPrompt.userChoice;
+					if (outcome === 'accepted') {
+						installBox.style.display = 'none';
+					}
+					deferredPrompt = null;
+				}
+			});
+		}
+
+		// --- 4. Logika Login 24 Jam & UI (DOM Ready) ---
 		document.addEventListener('DOMContentLoaded', function() {
+
+			// A. Simpan Sesi ke LocalStorage (Jika Laravel Session Aktif)
+			@if(Session::has('nik'))
+			const loginData = {
+				nik: "{{ Session::get('nik') }}",
+				expiry: new Date().getTime() + (24 * 60 * 60 * 1000)
+			};
+			localStorage.setItem('user_session', JSON.stringify(loginData));
+			@endif
+
+			// B. Cek Auto-Redirect (Hanya jika sedang di halaman login)
+			const session = JSON.parse(localStorage.getItem('user_session'));
+			if (session) {
+				const now = new Date().getTime();
+				if (now < session.expiry) {
+					// Sesi valid, langsung ke dashboard
+					window.location.href = "{{ route('dashboard') }}";
+					return; // Berhenti eksekusi sisa script jika redirect
+				} else {
+					// Sesi basi, hapus
+					localStorage.removeItem('user_session');
+				}
+			}
+
+			// C. Logika Toggle Password
 			const togglePassword = document.querySelector('#togglePassword');
-			const password = document.querySelector('#password');
+			const passwordField = document.querySelector('#password');
 			const eyeIcon = document.querySelector('#eyeIcon');
 
-			togglePassword.addEventListener('click', function() {
-				// Toggle the type attribute
-				const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
-				password.setAttribute('type', type);
+			if (togglePassword && passwordField) {
+				togglePassword.addEventListener('click', function() {
+					const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+					passwordField.setAttribute('type', type);
 
-				// Toggle the eye icon
-				eyeIcon.classList.toggle('fa-eye');
-				eyeIcon.classList.toggle('fa-eye-slash');
+					if (eyeIcon) {
+						eyeIcon.classList.toggle('fa-eye');
+						eyeIcon.classList.toggle('fa-eye-slash');
+					}
 
-				// Add animation
-				this.style.transform = 'scale(1.2)';
-				setTimeout(() => {
-					this.style.transform = 'scale(1)';
-				}, 200);
-			});
+					// Efek Animasi Kecil
+					this.style.transform = 'scale(1.2)';
+					setTimeout(() => {
+						this.style.transform = 'scale(1)';
+					}, 200);
+				});
 
-			// Add focus effects
-			password.addEventListener('focus', function() {
-				togglePassword.style.borderColor = '#4e73df';
-				togglePassword.style.color = '#4e73df';
-			});
-
-			password.addEventListener('blur', function() {
-				togglePassword.style.borderColor = '';
-				togglePassword.style.color = '';
-			});
+				// Efek Fokus Input
+				passwordField.addEventListener('focus', () => {
+					togglePassword.style.borderColor = '#4e73df';
+					togglePassword.style.color = '#4e73df';
+				});
+				passwordField.addEventListener('blur', () => {
+					togglePassword.style.borderColor = '';
+					togglePassword.style.color = '';
+				});
+			}
 		});
 	</script>
 </body>

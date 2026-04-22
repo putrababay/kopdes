@@ -4,7 +4,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kopdes Admin - @yield('title')</title>
+
+    <title>Koperasi - Sistem Manajemen Pinjaman</title>
+    <meta name="description" content="Sistem Informasi Koperasi Desa. Kelola pinjaman, angsuran, dan data nasabah dengan mudah dan aman.">
+    <meta name="keywords" content="koperasi, pinjaman pulsa, manajemen nasabah, koperasi desa">
+    <meta name="author" content="Nama Koperasi Anda">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:title" content="Login Koperasi - Sistem Manajemen Digital">
+    <meta property="og:description" content="Akses portal manajemen koperasi untuk pengelolaan nasabah dan transaksi pinjaman pulsa secara real-time.">
+    <meta property="og:image" content="{{ asset('images/logo-ab.png') }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Login Koperasi - Sistem Manajemen Digital">
+    <meta name="twitter:description" content="Kelola transaksi koperasi dengan lebih mudah dan transparan.">
+    <meta name="twitter:image" content="{{ asset('images/logo-ab.png') }}">
+
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-ab.png') }}">
+
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Kopdes">
+    <meta name="mobile-web-app-capable" content="yes">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
