@@ -15,8 +15,8 @@
 
     .sticky-filter {
         position: sticky;
-        top: 0;
-        z-index: 1020;
+        top: 50px;
+        z-index: 100;
         background: white;
         padding: 10px 0;
     }
@@ -64,42 +64,42 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 
-    <div class="sticky-filter border-bottom mb-3">
-        <form action="{{ route('angsuran.index') }}" method="GET" id="form-filter">
-            <div class="row g-2 px-2">
-                <div class="col-4">
-                    <select name="hari" class="form-select border-0 bg-light" onchange="this.form.submit()">
-                        @foreach(['SENIN','SELASA','RABU','KAMIS','JUMAT','SABTU','MINGGU'] as $h)
-                        <option value="{{ $h }}" {{ $harifilter == $h ? 'selected' : '' }}>{{ $h }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-8">
-                    <div class="input-group">
-                        <input type="text" name="search" class="form-control border-0 bg-light" placeholder="Cari nasabah..." value="{{ request('search') }}">
+<div class="sticky-filter border-bottom mb-3">
+    <form action="{{ route('angsuran.index') }}" method="GET" id="form-filter">
+        <div class="row g-2 px-2">
+            <div class="col-4">
+                <select name="hari" class="form-select border-0 bg-light" onchange="this.form.submit()">
+                    @foreach(['SENIN','SELASA','RABU','KAMIS','JUMAT','SABTU','MINGGU'] as $h)
+                    <option value="{{ $h }}" {{ $harifilter == $h ? 'selected' : '' }}>{{ $h }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-8">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control border-0 bg-light" placeholder="Cari nasabah..." value="{{ request('search') }}">
 
-                        @if(request('search'))
-                        <a href="{{ route('angsuran.index', ['hari' => $harifilter]) }}" class="btn btn-light border-0 text-muted" title="Bersihkan Pencarian">
-                            <i class="bi bi-x-circle-fill"></i>
-                        </a>
-                        @endif
+                    @if(request('search'))
+                    <a href="{{ route('angsuran.index', ['hari' => $harifilter]) }}" class="btn btn-light border-0 text-muted" title="Bersihkan Pencarian">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </a>
+                    @endif
 
-                        <button class="btn btn-light border-0" type="submit">
-                            <i class="bi bi-search"></i>
-                        </button>
-                    </div>
+                    <button class="btn btn-light border-0" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
                 </div>
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
+</div>
 
-    <div id="nasabah-container" class="row g-1 px-1">
-        @include('admin.angsuran._item_list')
-    </div>
+<div id="nasabah-container" class="row g-1 px-1">
+    @include('admin.angsuran._item_list')
+</div>
 
-    <div id="loading" class="text-center my-4 d-none">
-        <div class="spinner-border text-primary" role="status"></div>
-    </div>
+<div id="loading" class="text-center my-4 d-none">
+    <div class="spinner-border text-primary" role="status"></div>
+</div>
 
 
 <div class="modal fade" id="modalProfil" tabindex="-1" aria-hidden="true">

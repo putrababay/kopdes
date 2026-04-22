@@ -11,10 +11,10 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Nasabah</label>
-                        <select name="id_nasaba" id="id_nasaba" class="form-select bg-light border-0" required>
-                            <option value="">-- Pilih Nasabah --</option>
+                        <select name="id_nasaba" id="id_nasaba" class="form-select select2-nasabah" required>
+                            <option value="">Cari Nama Nasabah...</option>
                             @foreach(\App\Models\Nasabah::orderBy('nama', 'ASC')->get() as $nasabah)
-                                <option value="{{ $nasabah->id }}">{{ $nasabah->nama }}</option>
+                            <option value="{{ $nasabah->id }}">{{ $nasabah->nama }} - {{ $nasabah->alamat }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -24,7 +24,16 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Nominal Harga (Rp)</label>
-                        <input type="number" name="harga" id="harga" class="form-control bg-light border-0" placeholder="Contoh: 12000" required>
+                        <input type="text" id="harga_display" class="form-control bg-light border-0" placeholder="Contoh: 12.000" required>
+                        <input type="hidden" name="harga" id="harga">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Status</label>
+                        <select name="status" id="status" class="form-select bg-light border-0" required>
+                            <option value="">-- Pilih Status --</option>
+                            <option value="0">Belum Lunas</option>
+                            <option value="1">Lunas</option>
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer border-0">

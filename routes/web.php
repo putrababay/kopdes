@@ -61,4 +61,4 @@ Route::put('/pulsa/update/{id}', [PulsaPinjamController::class, 'update'])->name
 Route::delete('/pulsa/delete/{id}', [PulsaPinjamController::class, 'destroy'])->name('pulsa.destroy');
 
 // Route Tambahan (Opsional) untuk ambil data spesifik nasabah jika dibutuhkan di modal
-Route::get('/pulsa-pinjam/nasabah', [PulsaPinjamController::class, 'getNasabah'])->name('pulsa.nasabah');
+Route::get('/pulsa/nasabah', [PulsaPinjamController::class, 'getNasabah'])->name('pulsa.nasabah');

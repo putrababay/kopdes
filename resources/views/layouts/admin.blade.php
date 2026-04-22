@@ -70,6 +70,14 @@
             padding: 20px;
             text-align: center;
         }
+
+        .sticky-filter {
+            position: sticky;
+            top: 50px;
+            z-index: 100;
+            background: white;
+            padding: 10px 0;
+        }
     </style>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -138,7 +146,7 @@
             <i class="fas fa-hand-holding-usd"></i>
             <span>Pinjaman</span>
         </a>
-        <a href="{{ route('pulsa.index') }}" class="nav-item-mobile">
+        <a href="{{ route('pulsa.index') }}" class="nav-item-mobile {{ request()->is('pulsa') ? 'active' : '' }}">
             <i class="fas fa-mobile"></i>
             <span>Pulsa</span>
         </a>

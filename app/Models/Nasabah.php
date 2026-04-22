@@ -10,12 +10,24 @@ class Nasabah extends Authenticatable
     use Notifiable;
 
     protected $table = 'master_nasabah';
-    public $timestamps = false; 
+    public $timestamps = false;
 
     protected $fillable = [
-        'id', 'nik', 'nama', 'alamat', 'tgl_lahir', 'kota_lahir', 
-        'no_tlp', 'pekerjaan', 'foto', 'username', 'password', 
-        'level', 'lat', 'lng', 'tgl_daftar'
+        'id',
+        'nik',
+        'nama',
+        'alamat',
+        'tgl_lahir',
+        'kota_lahir',
+        'no_tlp',
+        'pekerjaan',
+        'foto',
+        'username',
+        'password',
+        'level',
+        'lat',
+        'lng',
+        'tgl_daftar'
     ];
 
     /**
@@ -35,21 +47,21 @@ class Nasabah extends Authenticatable
 
 
 
-// app/Models/Nasabah.php
-public function pinjamans() {
-    return $this->hasMany(Pinjam::class, 'id_nasaba');
-}
+    // app/Models/Nasabah.php
+    public function pinjamans()
+    {
+        return $this->hasMany(Pinjam::class, 'id_nasaba');
+    }
 
-// app/Models/Nasabah.php
-// app/Models/Nasabah.php
+    // app/Models/Nasabah.php
+    // app/Models/Nasabah.php
 
-public function pulsaPinjam()
-{
-    // Jika di database kolomnya bernama 'id_nasabah' (pakai h)
-    return $this->hasMany(MasterPulsaPinjam::class, 'id_pinjam', 'id');
-    
-    // ATAU jika di database kolomnya bernama 'nasabah_id'
-    // return $this->hasMany(MasterPulsaPinjam::class, 'nasabah_id', 'id');
-}
+    public function pulsaPinjam()
+    {
+        // Jika di database kolomnya bernama 'id_nasabah' (pakai h)
+        return $this->hasMany(MasterPulsaPinjam::class, 'id_pulsa', 'id');
 
+        // ATAU jika di database kolomnya bernama 'nasabah_id'
+        // return $this->hasMany(MasterPulsaPinjam::class, 'nasabah_id', 'id');
+    }
 }
