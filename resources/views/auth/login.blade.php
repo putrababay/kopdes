@@ -4,8 +4,27 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Login Koperasi</title>
-	<link rel="icon" type="image/png" href="images/logo-ab.png">
+
+	<title>Login Koperasi - Sistem Manajemen Pinjaman</title>
+	<meta name="description" content="Sistem Informasi Koperasi Desa. Kelola pinjaman, angsuran, dan data nasabah dengan mudah dan aman.">
+	<meta name="keywords" content="koperasi, pinjaman pulsa, manajemen nasabah, koperasi desa">
+	<meta name="author" content="Nama Koperasi Anda">
+
+	<meta property="og:type" content="website">
+	<meta property="og:url" content="{{ url()->current() }}">
+	<meta property="og:title" content="Login Koperasi - Sistem Manajemen Digital">
+	<meta property="og:description" content="Akses portal manajemen koperasi untuk pengelolaan nasabah dan transaksi pinjaman pulsa secara real-time.">
+	<meta property="og:image" content="{{ asset('images/logo-ab.png') }}">
+	<meta property="og:image:width" content="1200">
+	<meta property="og:image:height" content="630">
+
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:title" content="Login Koperasi - Sistem Manajemen Digital">
+	<meta name="twitter:description" content="Kelola transaksi koperasi dengan lebih mudah dan transparan.">
+	<meta name="twitter:image" content="{{ asset('images/logo-ab.png') }}">
+
+	<link rel="icon" type="image/png" href="{{ asset('images/logo-ab.png') }}">
+	<link rel="icon" type="image/png" href="{{ asset('images/logo-ab.png') }}">
 
 	<!-- Bootstrap 5 CSS -->
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -239,7 +258,7 @@
 <body>
 	<div class="login-container">
 		<div class="login-header">
-			<img src="{{ ('images/logo-small.png') }}" alt="Logo Koperasi">
+			<img src="{{ asset('images/logo-small.png') }}" alt="Logo Koperasi">
 			<h4>SISTEM INFORMASI KOPERASI</h4>
 			<p>Masukkan akun Anda untuk mengakses sistem</p>
 		</div>
