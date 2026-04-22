@@ -86,281 +86,114 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h4 class="fw-bold text-dark mb-0">Master Pinjaman</h4>
-            <p class="text-muted small mb-0">Pinjaman nasabah tahun {{ $tahun }}</p>
-        </div>
-        <button class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold" onclick="openModalPinjam('tambah')">
-            <i class="bi bi-plus-lg me-2"></i>Tambah
-        </button>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold text-dark mb-0">Master Pinjaman</h4>
+        <p class="text-muted small mb-0">Pinjaman nasabah tahun {{ $tahun }}</p>
     </div>
+    <button class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold" onclick="openModalPinjam('tambah')">
+        <i class="bi bi-plus-lg me-2"></i>Tambah
+    </button>
+</div>
 
-    <div class="card border-0 shadow-sm mb-4 rounded-4">
-        <div class="card-body p-3">
-            <form action="{{ route('pinjam.index') }}" method="GET" class="row g-2">
-                <div class="col-md-3">
-                    <div class="input-group">
-                        <span class="input-group-text bg-light border-0"><i class="bi bi-calendar-check text-primary"></i></span>
-                        <select name="tahun" class="form-select border-0 bg-light fw-bold" onchange="this.form.submit()">
-                            @for($i = date('Y'); $i >= 2020; $i--)
-                            <option value="{{ $i }}" {{ $tahun == $i ? 'selected' : '' }}>Tahun {{ $i }}</option>
-                            @endfor
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-9">
-                    <div class="input-group">
-                        <input type="text" name="search" class="form-control border-0 bg-light" placeholder="Cari nama nasabah..." value="{{ request('search') }}">
-                        @if(request()->filled('search'))
-                        <a href="{{ route('pinjam.index', ['tahun' => $tahun]) }}" class="btn btn-light border-0 bg-light px-3">
-                            <i class="bi bi-x-lg text-danger"></i>
-                        </a>
-                        @endif
-                        <button type="submit" class="btn btn-primary px-4">
-                            <i class="bi bi-search"></i>
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div class="row g-3">
-        @forelse($nasabahs as $n)
-        <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="card-body p-0">
-                    <div class="d-flex align-items-center p-3 bg-white cursor-pointer nasabah-row collapsed"
-                        data-bs-toggle="collapse" data-bs-target="#detail_{{ $n->id }}">
-
-                        <div class="flex-grow-1">
-                            <div class="d-flex align-items-center mb-1">
-                                <h6 class="fw-bold mb-0 text-dark">{{ $n->nama }}</h6>
-                                <span class="badge bg-blue-soft text-primary rounded-pill ms-2 sm-font" style="background:#eef2ff; font-size: 0.7rem;">
-                                    {{ $n->jumlah_transaksi }}x Transaksi
-                                </span>
-                            </div>
-                            <div class="desktop-info gap-3 small text-muted">
-                                <span><i class="bi bi-briefcase me-1"></i> {{ $n->pekerjaan }}</span>
-                                <span><i class="bi bi-clock-history me-1"></i> Terakhir: <b>{{ $n->pinjaman_terakhir ?? '-' }}</b></span>
-                                <span><i class="bi bi-geo-alt me-1"></i> {{ $n->alamat }}</span>
-                            </div>
-                            <div class="mobile-info small text-muted">
-                                <span><i class="bi bi-briefcase me-1"></i> {{ Str::limit($n->pekerjaan, 40) }}</span>
-                                <div><i class="bi bi-clock-history me-1"></i> {{ $n->pinjaman_terakhir ?? '-' }}</div>
-                                <span><i class="bi bi-geo-alt me-1"></i> {{ Str::limit($n->alamat, 55) }}</span>
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-center ms-3">
-                            <div class="avatar-wrapper me-3">
-                                @if($n->foto)
-                                <img src="{{ asset('storage/'.$n->foto) }}" class="avatar-img">
-                                @else
-                                <div class="avatar-initial">{{ substr($n->nama, 0, 1) }}</div>
-                                @endif
-                            </div>
-                            <i class="bi bi-chevron-down text-muted"></i>
-                        </div>
-                    </div>
-
-                    <div class="collapse" id="detail_{{ $n->id }}">
-                        <div class="bg-light p-3 border-top">
-                            <div class="d-none d-md-block table-responsive bg-white rounded-4 shadow-sm">
-                                <table class="table table-hover align-middle mb-0">
-                                    <thead class="bg-light text-muted small">
-                                        <tr>
-                                            <th class="ps-3">KODE</th>
-                                            <th>NOMINAL</th>
-                                            <th>ANGSURAN</th>
-                                            <th>TOTAL</th>
-                                            <th>TGL PINJAM</th>
-                                            <th>STATUS</th>
-                                            <th class="text-center">AKSI</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="small">
-                                        @foreach($n->pinjamans as $p)
-                                        <tr>
-                                            <td class="ps-3 fw-bold">#{{ $p->id }}</td>
-                                            <td class="fw-bold text-dark">Rp{{ number_format($p->pinjam, 0, ',', '.') }}</td>
-                                            <td>{{ number_format($p->angsuran, 0, ',', '.') }}</td>
-                                            <td class="fw-bold text-primary">Rp{{ number_format($p->t_pinjam, 0, ',', '.') }}</td>
-                                            <td>{{ date('d/m/Y', strtotime($p->tgl_pinjam)) }}</td>
-                                            <td>
-                                                <span class="badge rounded-pill bg-{{ $p->status == 'LUNAS' ? 'success' : 'warning' }} px-3">
-                                                    {{ $p->status }}
-                                                </span>
-                                            </td>
-                                            <td class="text-center">
-                                                <button class="btn btn-sm btn-light text-primary me-1"
-                                                    onclick="event.stopPropagation(); showProfil('{{ $p->id }}')">
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-light text-warning me-1"
-                                                    onclick="event.stopPropagation(); editPinjaman({{ $p->id }}, {{ $p->id_nasaba }}, {{ $p->pinjam }}, '{{ $p->tgl_pinjam }}', {{ $p->angsuran }}, '{{ $p->status }}', '{{ $p->tempo_hari }}', '{{ $p->lokasi_penarikan }}', '{{ $p->t_pinjam }}', '{{ $p->jaminan }}')">
-                                                    <i class="bi bi-pencil-square"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-light text-danger"
-                                                    onclick="event.stopPropagation(); confirmDelete('{{ $p->id }}')">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <div class="d-md-none">
-                                @foreach($n->pinjamans as $p)
-                                <div class="card border-0 shadow-sm rounded-3 mb-2">
-                                    <div class="card-body p-3">
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="fw-bold text-primary">#{{ $p->id }}</span>
-                                            <span class="badge bg-{{ $p->status == 'LUNAS' ? 'success' : 'warning' }} rounded-pill">{{ $p->status }}</span>
-                                        </div>
-                                        <div class="row g-2 mb-2">
-                                            <div class="col-6">
-                                                <small class="text-muted d-block">Nominal</small>
-                                                <span class="fw-bold">Rp{{ number_format($p->pinjam, 0, ',', '.') }}</span>
-                                                 <label class="fw-bold text-muted">({{ number_format($p->angsuran, 0, ',', '.')}}x)</label>
-                                            </div>
-                                            <div class="col-6 text-end">
-                                                <small class="text-muted d-block">Total</small>
-                                                <span class="fw-bold text-primary">Rp{{ number_format($p->t_pinjam, 0, ',', '.') }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                                            <small class="text-muted"><i class="bi bi-calendar3 me-1"></i> {{ date('d/m/y', strtotime($p->tgl_pinjam)) }}</small>
-                                            <div>
-                                                <button class="btn btn-sm btn-primary rounded-pill px-3"
-                                                    onclick="event.stopPropagation(); showProfil('{{ $p->id }}')">
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-warning text-white rounded-pill px-3"
-                                                    onclick="event.stopPropagation(); editPinjaman({{ $p->id }}, {{ $p->id_nasaba }}, {{ $p->pinjam }}, '{{ $p->tgl_pinjam }}', {{ $p->angsuran }}, '{{ $p->status }}', '{{ $p->tempo_hari }}', '{{ $p->lokasi_penarikan }}', '{{ $p->t_pinjam }}', '{{ $p->jaminan }}')">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-danger rounded-pill px-3"
-                                                    onclick="event.stopPropagation(); confirmDelete('{{ $p->id }}')">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
+<div class="card border-0 shadow-sm mb-4 rounded-4">
+    <div class="card-body p-3">
+        <form action="{{ route('pinjam.index') }}" method="GET" class="row g-2">
+            <div class="col-md-3">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-0"><i class="bi bi-calendar-check text-primary"></i></span>
+                    <select name="tahun" class="form-select border-0 bg-light fw-bold" onchange="this.form.submit()">
+                        @for($i = date('Y'); $i >= 2020; $i--)
+                        <option value="{{ $i }}" {{ $tahun == $i ? 'selected' : '' }}>Tahun {{ $i }}</option>
+                        @endfor
+                    </select>
                 </div>
             </div>
-        </div>
-        @empty
-        <div class="col-12 text-center py-5">
-            <i class="bi bi-person-x text-muted" style="font-size: 3rem;"></i>
-            <p class="text-muted mt-2">Nasabah tidak ditemukan</p>
-        </div>
-        @endforelse
-    </div>
+            <div class="col-md-9">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control border-0 bg-light" placeholder="Cari nama nasabah..." value="{{ request('search') }}">
 
-    <div class="d-flex justify-content-center mt-4">
-        {!! $nasabahs->links('pagination::bootstrap-5') !!}
-    </div>
-@include('admin.pinjam.modal')
-
-
-
-
-<div class="modal fade" id="modalProfil" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-fullscreen-sm-down modal-lg">
-        <div class="modal-content rounded-4-desktop border-0">
-            <div class="modal-header border-0 pb-0">
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-3 p-md-4">
-                <div class="text-center mb-4">
-                    <div id="prof-initial" class="avatar-initial-large mx-auto shadow"></div>
-                    <img id="prof-foto" src="" class="avatar-initial-large mx-auto shadow d-none" style="object-fit: cover;">
-                    <h4 id="prof-nama" class="fw-bold mt-3 mb-0"></h4>
-                    <span id="prof-pekerjaan" class="badge bg-light text-primary rounded-pill mb-2"></span>
-                    <p id="prof-alamat" class="text-muted small px-4"></p>
-                    <div class="d-flex justify-content-center gap-2">
-                        <a id="prof-tlp" href="" class="btn btn-success btn-sm rounded-pill px-3"><i class="bi bi-whatsapp"></i> Hubungi</a>
-                    </div>
-                </div>
-
-                <div class="card bg-light border-0 rounded-4 mb-3">
-                    <div class="card-body p-3">
-                        <h6 class="fw-bold mb-3 small text-uppercase text-muted">Detail Pinjaman</h6>
-                        <div class="row g-3">
-                            <div class="col-6">
-                                <small class="text-muted d-block">ID Pinjaman</small>
-                                <span id="prof-id" class="fw-bold"></span>
-                            </div>
-                            <div class="col-6">
-                                <small class="text-muted d-block">Tanggal Pinjam</small>
-                                <span id="prof-tgl" class="fw-bold"></span>
-                            </div>
-                            <div class="col-6">
-                                <small class="text-muted d-block">Total Pinjam</small>
-                                <span id="prof-t-pinjam" class="fw-bold"></span>
-                            </div>
-                            <div class="col-6">
-                                <small class="text-muted d-block">Angsuran</small>
-                                <span id="prof-pembayaran" class="fw-bold text-primary"></span>
-                            </div>
-                            <div class="col-6">
-                                <small class="text-muted d-block">Jaminan</small>
-                                <span id="prof-jaminan" class="small"></span>
-                            </div>
-                            <div class="col-6">
-                                <small class="text-muted d-block">Progress</small>
-                                <span id="prof-progress" class="fw-bold"></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="container-maps" class="mb-3 d-none">
-                    <label class="small fw-bold mb-2"><i class="bi bi-geo-alt-fill"></i> Lokasi Nasabah</label>
-                    <div id="map" style="height: 180px;" class="rounded-4 shadow-sm"></div>
-                    <div class="mt-2">
-                        <a id="link-gmaps" href="#" target="_blank" class="btn btn-outline-primary btn-sm w-100 rounded-pill">
-                            <i class="bi bi-cursor-fill"></i> Petunjuk Arah (Google Maps)
-                        </a>
-                    </div>
-                </div>
-
-                <h6 class="fw-bold mb-2 small text-uppercase text-muted">Riwayat Angsuran</h6>
-                <div class="table-responsive mb-3">
-                    <table class="table table-sm small table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Ke</th>
-                                <th>Tanggal</th>
-                                <th>Nominal</th>
-                                <th class="text-end">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="list-riwayat-angsuran">
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="sticky-bottom bg-white pt-2">
-                    <button id="btn-bayar-selanjutnya" class="btn btn-primary w-100 py-3 rounded-4 fw-bold shadow">
-                        Bayar Angsuran Selanjutnya
-                    </button>
+                    @if(request('search'))
+                    <a href="{{ route('pinjam.index', ['tahun' => $tahun]) }}" class="btn btn-light border-0 text-muted" title="Bersihkan Pencarian">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </a>
+                    @endif
+                    <button type="submit" class="btn btn-primary px-4"><i class="bi bi-search"></i></button>
                 </div>
             </div>
-        </div>
+        </form>
     </div>
 </div>
+<div class="row g-3" id="nasabah-container">
+    @if($nasabahs->count() > 0)
+    @include('admin.pinjam._item_nasabah', ['nasabahs' => $nasabahs])
+    @else
+    <div class="col-12 text-center py-5">
+        <i class="bi bi-person-x text-muted" style="font-size: 3rem;"></i>
+        <p class="text-muted mt-2">Nasabah tidak ditemukan</p>
+    </div>
+    @endif
+</div>
+
+<div id="infinite-scroll-marker" class="text-center my-4 py-3">
+    @if($nasabahs->hasMorePages())
+    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+    <span class="ms-2 small text-muted">Memuat data otomatis...</span>
+    @endif
+</div>
+
+<script>
+    let isLoading = false;
+    let nextUrl = "{{ $nasabahs->nextPageUrl() }}";
+
+    // Observer untuk mendeteksi scroll
+    const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && !isLoading && nextUrl) {
+            loadMoreData();
+        }
+    }, {
+        rootMargin: '200px'
+    });
+
+    const marker = document.getElementById('infinite-scroll-marker');
+    if (marker) observer.observe(marker);
+
+    function loadMoreData() {
+        isLoading = true;
+
+        fetch(nextUrl, {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                if (html.trim().length > 0) {
+                    // Tambahkan data ke container
+                    document.getElementById('nasabah-container').insertAdjacentHTML('beforeend', html);
+
+                    // Ambil URL Page berikutnya dari string HTML atau manipulasi URL
+                    let url = new URL(nextUrl);
+                    let page = parseInt(url.searchParams.get('page')) + 1;
+                    url.searchParams.set('page', page);
+                    nextUrl = url.toString();
+
+                    isLoading = false;
+                } else {
+                    nextUrl = null;
+                    marker.innerHTML = "<small class='text-muted'>Semua data telah dimuat</small>";
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                isLoading = false;
+            });
+    }
+</script>
+
+
+@include('admin.pinjam.modal')
+@include('admin.pinjam.modaldetail')
 
 <script>
     $(document).ready(function() {
@@ -682,7 +515,7 @@
         });
     }
 
- // --- Global Variables ---
+    // --- Global Variables ---
     let page = 1;
     let loading = false;
     let mapProfil;
@@ -924,9 +757,6 @@
     function printStruk(id) {
         window.open("{{ url('/angsuran/printstruk') }}/" + id, '_blank');
     }
-
-
-
 </script>
 @if(session('success'))
 <script>

@@ -6,11 +6,22 @@
 
         <div class="d-flex align-items-center">
             <div class="position-relative">
+                @if($n->foto && file_exists(public_path('foto/'.$n->foto)))
+                {{-- Tampilan Jika Ada Foto --}}
+                <img src="{{ asset('foto/'.$n->foto) }}"
+                    class="rounded-4 shadow-sm border border-2 border-white"
+                    style="width: 55px; height: 55px; object-fit: cover;">
+                @else
+                {{-- Tampilan Jika Tidak Ada Foto (Inisial) --}}
                 <div class="bg-primary bg-opacity-10 text-primary rounded-4 d-flex align-items-center justify-content-center fw-bold shadow-sm"
-                    style="width: 55px; height: 55px; font-size: 1.2rem;">
-                    {{ substr($n->nama, 0, 1) }}
+                    style="width: 55px; height: 55px; font-size: 1.2rem; border: 1px solid rgba(13, 110, 253, 0.1);">
+                    {{ strtoupper(substr($n->nama, 0, 1)) }}
                 </div>
-                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle">
+                @endif
+
+                {{-- Indikator Status Aktif --}}
+                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle shadow-sm"
+                    style="width: 12px; height: 12px;">
                     <span class="visually-hidden">Aktif</span>
                 </span>
             </div>
@@ -20,10 +31,10 @@
                     <h6 class="mb-0 fw-bold text-dark">{{ $n->nama }}</h6>
                     {{-- Icon Checklist Hijau jika sudah bayar --}}
                     @if(isset($n->sudah_bayar) && $n->sudah_bayar > 0)
-                        <i class="bi bi-check-circle-fill text-success ms-2" title="Sudah Bayar Hari Ini"></i>
+                    <i class="bi bi-check-circle-fill text-success ms-2" title="Sudah Bayar Hari Ini"></i>
                     @endif
                 </div>
-                
+
                 <div class="text-muted small text-truncate" style="max-width: 150px;">
                     <i class="bi bi-geo-alt-fill text-danger" style="font-size: 0.75rem;"></i>
                     {{ $n->lokasi_penarikan ?? 'Lokasi tidak set' }}

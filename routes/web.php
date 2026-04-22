@@ -36,6 +36,7 @@ Route::post('/pinjam', [PinjamController::class, 'store'])->name('pinjam.store')
 Route::post('/pinjam/{id}', [PinjamController::class, 'update'])->name('pinjam.update');
 Route::delete('/pinjam/{id}', [PinjamController::class, 'destroy'])->name('pinjam.destroy');
 
+
 Route::resource('angsuran', AngsuranController::class);
 Route::get('/angsuran', [AngsuranController::class, 'index'])->name('angsuran.index');
 Route::post('/angsuran', [AngsuranController::class, 'store'])->name('angsuran.store');
@@ -51,13 +52,13 @@ Route::delete('/angsuran/delete/{id}', [AngsuranController::class, 'destroy'])->
 
 
 
-    // Pastikan tidak ada typo pada kata 'pulsa'
-    Route::get('/pulsa', [PulsaPinjamController::class, 'index'])->name('pulsa.index');
-    // Route Utama untuk Tampilan dan Lazy Load
-    // Route CRUD (Create, Update, Delete) via AJAX
-    Route::post('/pulsa/store', [PulsaPinjamController::class, 'store'])->name('pulsa.store');
-    Route::put('/pulsa/update/{id}', [PulsaPinjamController::class, 'update'])->name('pulsa.update');
-    Route::delete('/pulsa/delete/{id}', [PulsaPinjamController::class, 'destroy'])->name('pulsa.destroy');
+// Pastikan tidak ada typo pada kata 'pulsa'
+Route::get('/pulsa', [PulsaPinjamController::class, 'index'])->name('pulsa.index');
+// Route Utama untuk Tampilan dan Lazy Load
+// Route CRUD (Create, Update, Delete) via AJAX
+Route::post('/pulsa/store', [PulsaPinjamController::class, 'store'])->name('pulsa.store');
+Route::put('/pulsa/update/{id}', [PulsaPinjamController::class, 'update'])->name('pulsa.update');
+Route::delete('/pulsa/delete/{id}', [PulsaPinjamController::class, 'destroy'])->name('pulsa.destroy');
 
-    // Route Tambahan (Opsional) untuk ambil data spesifik nasabah jika dibutuhkan di modal
-    Route::get('/pulsa-pinjam/nasabah', [PulsaPinjamController::class, 'getNasabah'])->name('pulsa.nasabah');
+// Route Tambahan (Opsional) untuk ambil data spesifik nasabah jika dibutuhkan di modal
+Route::get('/pulsa-pinjam/nasabah', [PulsaPinjamController::class, 'getNasabah'])->name('pulsa.nasabah');
