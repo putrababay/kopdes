@@ -7,6 +7,7 @@ use App\Http\Controllers\NasabahController;
 use App\Http\Controllers\PinjamController;
 use App\Http\Controllers\AngsuranController;
 use App\Http\Controllers\PulsaPinjamController;
+use App\Http\Controllers\SyncController;
 
 
 Route::get('/', function () {
@@ -62,3 +63,7 @@ Route::delete('/pulsa/delete/{id}', [PulsaPinjamController::class, 'destroy'])->
 
 // Route Tambahan (Opsional) untuk ambil data spesifik nasabah jika dibutuhkan di modal
 Route::get('/pulsa/nasabah', [PulsaPinjamController::class, 'getNasabah'])->name('pulsa.nasabah');
+
+Route::get('/pengaturan', [SyncController::class, 'index'])->name('pengaturan.index');
+Route::post('/pengaturan/update', [SyncController::class, 'update'])->name('pengaturan.update');
+Route::get('/sync/start', [SyncController::class, 'startSync'])->name('sync.start');

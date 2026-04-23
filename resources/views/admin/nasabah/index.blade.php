@@ -187,33 +187,33 @@
 
             <div class="card-body p-3">
                 <div class="d-flex align-items-center justify-content-between mb-3">
-    <div class="d-flex align-items-center">
-        {{-- Cek apakah foto ada di DB dan file fisiknya tersedia --}}
-        @if($n->foto && file_exists(public_path('foto/'.$n->foto)))
-            <img src="{{ asset('foto/'.$n->foto) }}"
-                class="rounded-circle object-fit-cover border me-3"
-                style="width: 50px; height: 50px; cursor: pointer;"
-                onclick="previewFoto('{{ asset('foto/'.$n->foto) }}', '{{ $n->nama }}')"
-                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-        @else
-            {{-- Tampilkan inisial jika foto kosong atau file tidak ditemukan --}}
-            <div class="bg-light text-primary fw-bold d-flex align-items-center justify-content-center rounded-circle border me-3"
-                style="width: 50px; height: 50px; min-width: 50px;">
-                {{ strtoupper(substr($n->nama, 0, 1)) }}
-            </div>
-        @endif
+                    <div class="d-flex align-items-center">
+                        {{-- Cek apakah foto ada di DB dan file fisiknya tersedia --}}
+                        @if($n->foto && file_exists(public_path('foto/'.$n->foto)))
+                        <img src="{{ asset('foto/'.$n->foto) }}"
+                            class="rounded-circle object-fit-cover border me-3"
+                            style="width: 50px; height: 50px; cursor: pointer;"
+                            onclick="previewFoto('{{ asset('foto/'.$n->foto) }}', '{{ $n->nama }}')"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        @else
+                        {{-- Tampilkan inisial jika foto kosong atau file tidak ditemukan --}}
+                        <div class="bg-light text-primary fw-bold d-flex align-items-center justify-content-center rounded-circle border me-3"
+                            style="width: 50px; height: 50px; min-width: 50px;">
+                            {{ strtoupper(substr($n->nama, 0, 1)) }}
+                        </div>
+                        @endif
 
-        <div>
-            <h6 class="mb-0 fw-bold text-dark">{{ $n->nama }}</h6>
-            <small class="text-muted">
-                <i class="bi bi-card-text me-1"></i>{{ $n->nik }}
-            </small>
-        </div>
-    </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold text-dark">{{ $n->nama }}</h6>
+                            <small class="text-muted">
+                                <i class="bi bi-card-text me-1"></i>{{ $n->nik }}
+                            </small>
+                        </div>
+                    </div>
 
-    {{-- Badge nomor tetap di sisi kanan --}}
-    <span class="badge bg-light text-primary border rounded-pill">#{{ $no++ }}</span>
-</div>
+                    {{-- Badge nomor tetap di sisi kanan --}}
+                    <span class="badge bg-light text-primary border rounded-pill">#{{ $no++ }}</span>
+                </div>
 
                 <div class="info-section bg-light p-3 rounded-3 mb-3">
                     <div class="row g-2">
@@ -332,6 +332,35 @@
         </form>
     </div>
 </div>
+
+
+{{-- Handler SweetAlert Flash Session --}}
+@if(session('success'))
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: "{{ session('success') }}",
+            showConfirmButton: false,
+            timer: 2000
+        });
+    });
+</script>
+@endif
+
+@if($errors->any())
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal Simpan',
+            text: "{{ $errors->first() }}", // Menampilkan pesan error pertama agar lebih jelas
+        });
+    });
+</script>
+@endif
+
 
 <script>
     let modalNasabah;
@@ -525,26 +554,5 @@
     }
 </script>
 
-{{-- Handler SweetAlert Flash Session --}}
-@if(session('success'))
-<script>
-    Swal.fire({
-        icon: 'success',
-        title: 'Berhasil!',
-        text: "{{ session('success') }}",
-        showConfirmButton: false,
-        timer: 2000
-    });
-</script>
-@endif
 
-@if($errors->any())
-<script>
-    Swal.fire({
-        icon: 'error',
-        title: 'Gagal Simpan',
-        text: "{{ $errors->first() }}", // Menampilkan pesan error pertama agar lebih jelas
-    });
-</script>
-@endif
 @endsection

@@ -143,7 +143,8 @@
                     <i class="fas fa-user-circle fa-lg"></i>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                    <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Profil</a></li>
+                    <li><a class="dropdown-item" href="{{ route('pengaturan.index') }}"><i
+                                class="fas fa-cog me-2"></i>Pengaturan</a></li>
                     <li>
                         <hr class="dropdown-divider">
                     </li>
