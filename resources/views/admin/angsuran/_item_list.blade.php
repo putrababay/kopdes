@@ -20,10 +20,19 @@
                 @endif
 
                 {{-- Indikator Status Aktif --}}
+                @if($n->status == 'AKTIF')
                 <span class="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle shadow-sm"
                     style="width: 12px; height: 12px;">
                     <span class="visually-hidden">Aktif</span>
                 </span>
+                @endif
+
+                @if($n->status == 'MACET')
+                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle shadow-sm"
+                    style="width: 12px; height: 12px;">
+                    <span class="visually-hidden">Macet</span>
+                </span>
+                @endif
             </div>
 
             <div class="flex-grow-1 ms-3">

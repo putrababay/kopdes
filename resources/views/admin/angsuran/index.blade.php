@@ -109,9 +109,10 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-3 p-md-4">
+
                 <div class="text-center mb-4">
                     <div id="prof-initial" class="avatar-initial-large mx-auto shadow"></div>
-                    <img id="prof-foto" src="" class="avatar-initial-large mx-auto shadow d-none" style="object-fit: cover;">
+                    <img id="prof-foto" src="" class="avatar-initial-large mx-auto shadow d-none" style="object-fit: cover !important; width: 200px; height: 200px; border-radius: 15px;">
                     <h4 id="prof-nama" class="fw-bold mt-3 mb-0"></h4>
                     <span id="prof-pekerjaan" class="badge bg-light text-primary rounded-pill mb-2"></span>
                     <p id="prof-alamat" class="text-muted small px-4"></p>
@@ -119,6 +120,7 @@
                         <a id="prof-tlp" href="" class="btn btn-success btn-sm rounded-pill px-3"><i class="bi bi-whatsapp"></i> Hubungi</a>
                     </div>
                 </div>
+
 
                 <div class="card bg-light border-0 rounded-4 mb-3">
                     <div class="card-body p-3">

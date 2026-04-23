@@ -8,58 +8,63 @@ use Illuminate\Support\Facades\DB;
 
 class AngsuranController extends Controller
 {
-   public function index(Request $request)
-{
-    $hariIndo = [
-        'Sun' => 'MINGGU', 'Mon' => 'SENIN', 'Tue' => 'SELASA',
-        'Wed' => 'RABU', 'Thu' => 'KAMIS', 'Fri' => 'JUMAT', 'Sat' => 'SABTU'
-    ];
-    $harifilter = $request->input('hari', $hariIndo[date('D')]);
-    $search = $request->input('search');
-    $today = now()->format('Y-m-d');
+    public function index(Request $request)
+    {
+        $hariIndo = [
+            'Sun' => 'MINGGU',
+            'Mon' => 'SENIN',
+            'Tue' => 'SELASA',
+            'Wed' => 'RABU',
+            'Thu' => 'KAMIS',
+            'Fri' => 'JUMAT',
+            'Sat' => 'SABTU'
+        ];
+        $harifilter = $request->input('hari', $hariIndo[date('D')]);
+        $search = $request->input('search');
+        $today = now()->format('Y-m-d');
 
-    // 1. Ambil data nasabah (Query Pertama)
-    $nasabahs = DB::table('master_pinjam')
-        ->join('master_nasabah', 'master_pinjam.id_nasaba', '=', 'master_nasabah.id')
-        ->select(
-            'master_pinjam.*',
-            'master_nasabah.nama',
-            'master_nasabah.alamat',
-            'master_nasabah.foto'
-        )
-        ->addSelect('master_pinjam.id as id_pinjam')
-        ->where('master_pinjam.tempo_hari', $harifilter)
-        ->where('master_pinjam.status', 'AKTIF')
-        ->when($search, function ($query, $search) {
-            return $query->where(function ($q) use ($search) {
-                $q->where('master_nasabah.nama', 'LIKE', "%{$search}%")
-                  ->orWhere('master_pinjam.lokasi_penarikan', 'LIKE', "%{$search}%");
-            });
-        })
-        ->orderBy('master_nasabah.nama', 'ASC')
-        ->simplePaginate(10);
+        // 1. Ambil data nasabah (Query Pertama)
+        $nasabahs = DB::table('master_pinjam')
+            ->join('master_nasabah', 'master_pinjam.id_nasaba', '=', 'master_nasabah.id')
+            ->select(
+                'master_pinjam.*',
+                'master_nasabah.nama',
+                'master_nasabah.alamat',
+                'master_nasabah.foto'
+            )
+            ->addSelect('master_pinjam.id as id_pinjam')
+            ->where('master_pinjam.tempo_hari', $harifilter)
+            ->where('master_pinjam.status', '!=', 'LUNAS')
+            ->when($search, function ($query, $search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('master_nasabah.nama', 'LIKE', "%{$search}%")
+                        ->orWhere('master_pinjam.lokasi_penarikan', 'LIKE', "%{$search}%");
+                });
+            })
+            ->orderBy('master_nasabah.nama', 'ASC')
+            ->simplePaginate(10);
 
-    // 2. Ambil semua ID Pinjam yang muncul di halaman ini saja
-    $ids = collect($nasabahs->items())->pluck('id_pinjam')->toArray();
+        // 2. Ambil semua ID Pinjam yang muncul di halaman ini saja
+        $ids = collect($nasabahs->items())->pluck('id_pinjam')->toArray();
 
-    // 3. Ambil data angsuran hari ini untuk ID tersebut (Query Kedua - Efisien)
-    $sudahBayar = DB::table('angsuran')
-        ->whereIn('id_pinjam', $ids)
-        ->where('tgl', 'LIKE', "{$today}%")
-        ->pluck('nominal', 'id_pinjam'); // Menghasilkan array [id_pinjam => nominal]
+        // 3. Ambil data angsuran hari ini untuk ID tersebut (Query Kedua - Efisien)
+        $sudahBayar = DB::table('angsuran')
+            ->whereIn('id_pinjam', $ids)
+            ->where('tgl', 'LIKE', "{$today}%")
+            ->pluck('nominal', 'id_pinjam'); // Menghasilkan array [id_pinjam => nominal]
 
-    // 4. Tempelkan data angsuran ke dalam objek nasabahs
-    $nasabahs->getCollection()->transform(function ($item) use ($sudahBayar) {
-        $item->sudah_bayar = $sudahBayar[$item->id_pinjam] ?? null;
-        return $item;
-    });
+        // 4. Tempelkan data angsuran ke dalam objek nasabahs
+        $nasabahs->getCollection()->transform(function ($item) use ($sudahBayar) {
+            $item->sudah_bayar = $sudahBayar[$item->id_pinjam] ?? null;
+            return $item;
+        });
 
-    if ($request->ajax()) {
-        return view('admin.angsuran._item_list', compact('nasabahs'))->render();
+        if ($request->ajax()) {
+            return view('admin.angsuran._item_list', compact('nasabahs'))->render();
+        }
+
+        return view('admin.angsuran.index', compact('nasabahs', 'harifilter'));
     }
-
-    return view('admin.angsuran.index', compact('nasabahs', 'harifilter'));
-}
 
     public function getDetailNasabah($id_pinjam)
     {

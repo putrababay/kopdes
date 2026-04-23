@@ -205,12 +205,20 @@
             allowClear: true
         });
 
+        // Fungsi Pembantu untuk Menampilkan Inisial
+        function showInitial(nama) {
+            const initial = nama ? nama.charAt(0).toUpperCase() : '?';
+            $('#preview-foto').addClass('d-none').attr('src', ''); // Kosongkan src agar tidak trigger error lagi
+            $('#preview-initial').removeClass('d-none').text(initial);
+        }
+
         // 2. Autofokus pencarian saat modal dibuka
         $('#modalPinjam').on('shown.bs.modal', function() {
-            // Sedikit delay agar fokus tidak tercuri kembali oleh modal Bootstrap
-            setTimeout(() => {
-                $(this).find('.select2-search__field').focus();
-            }, 100);
+            // Gunakan selector yang lebih spesifik untuk menargetkan input search select2
+            const searchField = document.querySelector('.select2-container--open .select2-search__field');
+            if (searchField) {
+                searchField.focus();
+            }
         });
 
         // 3. Logic saat nasabah dipilih
@@ -220,26 +228,27 @@
             const nama = selected.data('nama');
             const alamat = selected.data('alamat');
 
+            // Reset state gambar setiap kali ganti nasabah
+            $('#preview-foto').off('error');
+
             if (nama) {
                 $('#nasabah-name-display').text(nama);
                 $('#nasabah-alamat-display').text(alamat || 'Alamat tidak tersedia');
 
                 if (foto && foto !== "") {
-                    // Set SRC dan hapus d-none
-                    // Tambahkan d-none kembali di onerror (jika file fisik tidak ada/404)
+                    $('#preview-initial').addClass('d-none');
                     $('#preview-foto')
                         .attr('src', foto)
                         .removeClass('d-none')
-                        .on('error', function() {
-                            // Jika 404, otomatis tampilkan inisial
+                        .one('error', function() {
+                            // Menggunakan .one() agar hanya berjalan sekali per ganti foto
                             showInitial(nama);
                         });
-                    $('#preview-initial').addClass('d-none');
                 } else {
                     showInitial(nama);
                 }
             } else {
-                // Reset ke default jika dikosongkan (tombol X diklik)
+                // Reset ke default jika dikosongkan
                 $('#nasabah-name-display').text('-');
                 $('#nasabah-alamat-display').text('Pilih Nasabah');
                 showInitial('?');
@@ -266,18 +275,14 @@
         const modalEl = document.getElementById('modalPinjam');
         const form = document.getElementById('formPinjam');
         const methodField = document.getElementById('methodField');
-        const previewContainer = document.getElementById('jadwal-preview'); // Pastikan ID ini ada di HTML
+        const previewContainer = document.getElementById('jadwal-preview');
 
         if (!form) return;
 
-        // Reset Form & UI
+        // 1. Reset Form & UI
         form.reset();
         methodField.innerHTML = '';
         if (previewContainer) previewContainer.innerHTML = '<small class="text-muted italic">Menghitung jadwal...</small>';
-
-        if (typeof jQuery !== 'undefined') {
-            $('.select2-nasabah').val(null).trigger('change');
-        }
 
         if (mode === 'tambah') {
             document.getElementById('modalTitle').innerText = 'Tambah Pinjaman';
@@ -289,55 +294,66 @@
             document.getElementById('status').value = 'AKTIF';
             document.getElementById('tempo_hari').value = 'SENIN';
 
-            // Autofokus Select2
-            $('#modalPinjam').one('shown.bs.modal', function() {
-                $('.select2-nasabah').select2('open');
-            });
+            if (typeof jQuery !== 'undefined') {
+                $('.select2-nasabah').val(null).trigger('change');
+            }
 
-            // Trigger hitung jadwal default
             setTimeout(generateJadwalAngsuran, 300);
 
         } else {
             document.getElementById('modalTitle').innerText = 'Edit Pinjaman';
 
-            // Fix Route Update dengan Placeholder
+            // 2. Set Action URL & Method PUT
             let url = "{{ route('pinjam.update', ['pinjam' => ':id']) }}";
             form.action = url.replace(':id', data.id);
-
             methodField.innerHTML = '<input type="hidden" name="_method" value="PUT">';
 
-            // Isi field data
+            // 3. Isi Field Input Biasa
             document.getElementById('tgl_pinjam').value = data.tgl_pinjam;
             document.getElementById('angsuran').value = data.angsuran;
             document.getElementById('status').value = data.status;
-            document.getElementById('tempo_hari').value = data.tempo_hari;
             document.getElementById('lokasi_penarikan').value = data.lokasi_penarikan || '';
+            document.getElementById('jaminan').value = data.jaminan || '';
+
+            // 4. Handle Tempo Hari (Pastikan Uppercase sesuai option)
+            if (data.tempo_hari) {
+                document.getElementById('tempo_hari').value = data.tempo_hari.toUpperCase();
+            }
+
+            // 5. Handle Nominal & Hidden Fields
             document.getElementById('pinjam').value = data.pinjam;
             document.getElementById('display_pinjam').value = formatVisualRupiah(data.pinjam);
             document.getElementById('t_pinjam').value = data.t_pinjam;
             document.getElementById('display_t_pinjam').value = formatVisualRupiah(data.t_pinjam);
-            document.getElementById('jaminan').value = data.jaminan || '';
-
-            // Set hidden fields jadwal jika ada
             document.getElementById('detail_tgl').value = data.detail_tgl || '';
             document.getElementById('tgl_akhir').value = data.tgl_akhir || '';
 
-            // Trigger Select2 & Foto Preview
+            // 6. Sinkronisasi Select2 Nasabah      
+            // 6. Sinkronisasi Select2 Nasabah
             if (typeof jQuery !== 'undefined') {
-                $('.select2-nasabah').val(data.id_nasaba).trigger('change');
+                const $selectNasabah = $('.select2-nasabah');
+
+                // Pastikan value di-set dan trigger 'change' agar listener foto/alamat berjalan
+                $selectNasabah.val(data.id_nasaba).trigger('change');
+
+                // Tambahan: Kadang Select2 butuh trigger 'select2:select' secara manual untuk memperbarui tampilan teks
+                if ($selectNasabah.val() !== data.id_nasaba) {
+                    // Jika nilai masih belum berubah, paksa manual berdasarkan value
+                    $selectNasabah.val(data.id_nasaba).trigger('change.select2');
+                }
             }
 
-            // Hitung ulang pembayaran & Refresh Preview Jadwal
+            // 7. Hitung ulang UI (Pembayaran & Preview Jadwal)
+            // Diberi delay sedikit agar trigger change Select2 selesai diproses
             setTimeout(() => {
-                calculatePembayaran();
-                generateJadwalAngsuran();
-            }, 200);
+                if (typeof calculatePembayaran === "function") calculatePembayaran();
+                if (typeof generateJadwalAngsuran === "function") generateJadwalAngsuran();
+            }, 300);
         }
 
         const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
         bsModal.show();
     }
-
     /**
      * LOGIKA MENGHITUNG JADWAL ANGSURAN (MINGGUAN)
      */
@@ -472,7 +488,7 @@
         }
     }
 
-    function editPinjaman(id, id_nasaba, pinjam, tgl, angsuran, status, tempo, lokasi_penarikan, t_pinjam, jaminan) {
+    function editPinjaman(id, id_nasaba, pinjam, tgl, angsuran, status, tempo, lokasi_penarikan, t_pinjam, jaminan, detail_tgl, tgl_akhir) {
         const data = {
             id: id,
             id_nasaba: id_nasaba,
@@ -483,7 +499,9 @@
             tempo_hari: tempo,
             lokasi_penarikan: lokasi_penarikan,
             t_pinjam: t_pinjam, // sesuaikan jika t_pinjam berbeda
-            jaminan: jaminan // tambahkan field jaminan
+            jaminan: jaminan, // tambahkan field jaminan
+            detail_tgl: detail_tgl,
+            tgl_akhir: tgl_akhir,
 
         };
         openModalPinjam('edit', data);
