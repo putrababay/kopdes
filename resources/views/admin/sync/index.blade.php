@@ -3,23 +3,127 @@
 @section('content')
 <div class="container py-4">
     <div class="row g-3 mb-4">
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm bg-primary text-white rounded-4">
-                <div class="card-body p-3">
-                    <div class="small opacity-75">Total Data Lokal (Offline)</div>
-                    <h3 class="fw-bold mb-0" id="total-offline">{{ $stats['total_offline'] ?? 0 }}</h3>
+        <div class="col-6 col-md-6">
+            <div class="card border-0 shadow-sm bg-primary text-white rounded-4 h-100">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <i class="bi bi-pc-display h2 h1-md mb-0 me-2 me-md-3 opacity-50"></i>
+                    <div>
+                        <div class="small opacity-75 d-none d-sm-block">Data Lokal (Offline)</div>
+                        <div class="small opacity-75 d-block d-sm-none">Lokal</div>
+                        <h3 class="fw-bold mb-0">{{ number_format($stats['total_offline']) }}</h3>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm bg-success text-white rounded-4">
-                <div class="card-body p-3">
-                    <div class="small opacity-75">Total Data Server (Online)</div>
-                    <h3 class="fw-bold mb-0" id="total-online">{{ $stats['total_online'] ?? 0 }}</h3>
+        <div class="col-6 col-md-6">
+            <div class="card border-0 shadow-sm bg-success text-white rounded-4 h-100">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <i class="bi bi-cloud-check h2 h1-md mb-0 me-2 me-md-3 opacity-50"></i>
+                    <div>
+                        <div class="small opacity-75 d-none d-sm-block">Data Server (Online)</div>
+                        <div class="small opacity-75 d-block d-sm-none">Online</div>
+                        <h3 class="fw-bold mb-0">{{ is_numeric($stats['total_online']) ? number_format($stats['total_online']) : $stats['total_online'] }}</h3>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+        <div class="card-header bg-white border-0 py-3">
+            <h6 class="fw-bold mb-0"><i class="bi bi-table me-2"></i>Detail Perbandingan Tabel</h6>
+        </div>
+
+        <div class="table-responsive d-none d-md-block">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr class="small text-uppercase text-muted">
+                        <th class="ps-4">Nama Tabel</th>
+                        <th class="text-center">Lokal</th>
+                        <th class="text-center">Online</th>
+                        <th class="text-center">Belum Backup</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($stats['detail'] as $row)
+                    <tr>
+                        <td class="ps-4 fw-medium">{{ $row['nama_tabel'] }}</td>
+                        <td class="text-center"><span class="badge bg-light text-dark border">{{ number_format($row['lokal']) }}</span></td>
+                        <td class="text-center">
+                            @if($row['online'] === 'ERR')
+                            <span class="badge bg-danger-subtle text-danger border-0">Offline</span>
+                            @else
+                            <span class="badge bg-light text-dark border">{{ number_format($row['online']) }}</span>
+                            @endif
+                        </td>
+                        <td class="text-center">
+                            @if($row['selisih'] > 0)
+                            <span class="badge bg-warning text-dark border-0">
+                                <i class="bi bi-arrow-up-circle-fill me-1"></i>{{ number_format($row['selisih']) }} data
+                            </span>
+                            @else
+                            <span class="badge bg-success-subtle text-success border-0"><i class="bi bi-check-circle-fill me-1"></i>Sinkron</span>
+                            @endif
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-md-none border-top">
+            @foreach($stats['detail'] as $row)
+            <div class="p-3 border-bottom">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-bold text-primary">{{ $row['nama_tabel'] }}</span>
+                    @if($row['selisih'] > 0)
+                    <span class="badge bg-warning text-dark small">
+                        {{ number_format($row['selisih']) }} baru
+                    </span>
+                    @else
+                    <span class="text-success small"><i class="bi bi-check-circle-fill"></i></span>
+                    @endif
+                </div>
+                <div class="d-flex justify-content-between small text-muted">
+                    <span>Lokal: <strong>{{ number_format($row['lokal']) }}</strong></span>
+                    <span>Online: <strong>{{ $row['online'] === 'ERR' ? 'Error' : number_format($row['online']) }}</strong></span>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+
+    <style>
+        /* Animasi halus untuk badge peringatan */
+        .badge.bg-warning {
+            animation: pulse-subtle 2s infinite;
+        }
+
+        @keyframes pulse-subtle {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Penyesuaian ukuran teks untuk mobile */
+        @media (max-width: 576px) {
+            h3 {
+                font-size: 1.25rem;
+            }
+
+            .h2 {
+                font-size: 1.5rem !important;
+            }
+        }
+    </style>
 
     <div class="row g-4">
         <div class="col-md-4">

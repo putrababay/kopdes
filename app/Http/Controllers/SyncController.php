@@ -13,35 +13,45 @@ class SyncController extends Controller
         'master_nasabah'      => 'id',
         'master_pinjam'       => 'id',
         'angsuran'            => 'id',
-        'master_pulsa'        => 'id',
         'master_pulsa_pinjam' => 'id_pinjam'
     ];
 
     public function index()
     {
         $settings = DB::table('settings')->pluck('value', 'key');
-
-        // Hitung total data offline
-        $totalOffline = 0;
-        foreach ($this->syncTables as $table => $id) {
-            $totalOffline += DB::table($table)->count();
-        }
-
-        // Hitung total data online (jika koneksi tersedia)
-        $totalOnline = 0;
         $this->setupOnlineConnection($settings);
 
-        try {
-            foreach ($this->syncTables as $table => $id) {
-                $totalOnline += DB::connection('mysql_online')->table($table)->count();
+        $detailStats = [];
+        $totalOffline = 0;
+        $totalOnline = 0;
+        $onlineError = false;
+
+        foreach ($this->syncTables as $table => $id) {
+            $countLokal = DB::table($table)->count();
+            $totalOffline += $countLokal;
+
+            $countOnline = 0;
+            try {
+                if (!$onlineError) {
+                    $countOnline = DB::connection('mysql_online')->table($table)->count();
+                    $totalOnline += $countOnline;
+                }
+            } catch (\Exception $e) {
+                $onlineError = true;
             }
-        } catch (\Exception $e) {
-            $totalOnline = "Error Koneksi";
+
+            $detailStats[] = [
+                'nama_tabel' => $table,
+                'lokal' => $countLokal,
+                'online' => $onlineError ? 'ERR' : $countOnline,
+                'selisih' => $onlineError ? '-' : ($countLokal - $countOnline)
+            ];
         }
 
         $stats = [
             'total_offline' => $totalOffline,
-            'total_online' => $totalOnline
+            'total_online'  => $onlineError ? 'Koneksi Gagal' : $totalOnline,
+            'detail' => $detailStats
         ];
 
         return view('admin.sync.index', compact('settings', 'stats'));
