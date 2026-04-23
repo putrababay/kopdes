@@ -79,7 +79,7 @@
                                     <td class="fw-bold text-primary">Rp{{ number_format($p->t_pinjam, 0, ',', '.') }}</td>
                                     <td>{{ date('d/m/Y', strtotime($p->tgl_pinjam)) }}</td>
                                     <td>
-                                        <span class="badge bg-{{ $p->status == 'LUNAS' ? 'success' : ($p->status == 'MACET' ? 'danger' : 'warning') }} rounded-pill">
+                                        <span class="badge rounded-pill bg-{{ $p->status == 'LUNAS' ? 'success' : 'warning' }} px-3">
                                             {{ $p->status }}
                                         </span>
                                     </td>
@@ -100,9 +100,7 @@
                             <div class="card-body p-3">
                                 <div class="d-flex justify-content-between mb-2">
                                     <span class="fw-bold text-primary">#{{ $p->id }}</span>
-                                    <span class="badge bg-{{ $p->status == 'LUNAS' ? 'success' : ($p->status == 'MACET' ? 'danger' : 'warning') }} rounded-pill">
-                                        {{ $p->status }}
-                                    </span>
+                                    <span class="badge bg-{{ $p->status == 'LUNAS' ? 'success' : 'warning' }} rounded-pill">{{ $p->status }}</span>
                                 </div>
                                 <div class="row g-2 mb-2 small">
                                     <div class="col-6">
@@ -114,10 +112,12 @@
                                         <span class="fw-bold text-primary">Rp{{ number_format($p->t_pinjam, 0, ',', '.') }}</span>
                                     </div>
                                 </div>
-                                <div class="d-flex justify-content-between small">
-                                    <button class="btn btn-sm btn-light text-primary me-1 w-100" onclick="event.stopPropagation(); showProfil('{{ $p->id }}')"><i class="bi bi-eye"></i></button>
-                                    <button class="btn btn-sm btn-light text-warning me-1 w-100" onclick="event.stopPropagation(); editPinjaman('{{ $p->id }}', '{{ $p->id_nasaba }}', '{{ $p->pinjam }}', '{{ $p->tgl_pinjam }}', '{{ $p->angsuran }}', '{{ $p->status }}', '{{ $p->tempo }}', '{{ $p->lokasi_penarikan }}', '{{ $p->t_pinjam }}', '{{ $p->jaminan }}', '{{ $p->detail_tgl }}', '{{ $p->tgl_akhir }}')"><i class="bi bi-pencil-square"></i></button>
-                                    <button class="btn btn-sm btn-light text-danger me-1 w-100" onclick="event.stopPropagation(); confirmDelete('{{ $p->id }}')"><i class="bi bi-trash"></i></button>
+                                <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                                    <div class="d-flex justify-content-between w-100">
+                                        <button class="btn btn-sm btn-light text-primary me-1 w-100" onclick="event.stopPropagation(); showProfil('{{ $p->id }}')"><i class="bi bi-eye"></i></button>
+                                        <button class="btn btn-sm btn-light text-warning me-1 w-100" onclick="event.stopPropagation(); editPinjaman('{{ $p->id }}', '{{ $p->id_nasaba }}', '{{ $p->pinjam }}', '{{ $p->tgl_pinjam }}', '{{ $p->angsuran }}', '{{ $p->status }}', '{{ $p->tempo }}', '{{ $p->lokasi_penarikan }}', '{{ $p->t_pinjam }}', '{{ $p->jaminan }}', '{{ $p->detail_tgl }}', '{{ $p->tgl_akhir }}')"><i class="bi bi-pencil-square"></i></button>
+                                        <button class="btn btn-sm btn-light text-danger me-1 w-100" onclick="event.stopPropagation(); confirmDelete('{{ $p->id }}')"><i class="bi bi-trash"></i></button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -127,4 +127,5 @@
             </div>
         </div>
     </div>
-    @endforeach
+</div>
+@endforeach
