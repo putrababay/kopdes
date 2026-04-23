@@ -131,8 +131,10 @@ class AngsuranController extends Controller
         $nasabah = DB::table('master_nasabah')->where('nik', $pinjam->nik)->first();
 
         $tampil = [
+            'id'        => $angsuran->id,
             'id_pinjam' => $angsuran->id_pinjam,
             'nama'      => $nasabah ? $nasabah->nama : 'Nama Tidak Ditemukan',
+            'angsuran'  => $pinjam->angsuran,
             'no_tlp'    => $nasabah ? $nasabah->no_tlp : '',
             'nominal'   => $angsuran->nominal,
             'ke'        => $angsuran->angsuran,

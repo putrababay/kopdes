@@ -133,7 +133,7 @@
         </div>
         <div class="info-row">
             <span class="info-label">Cicilan Ke:</span>
-            <span class="info-value">{{ $tampil['ke'] }}</span>
+            <span class="info-value">{{ $tampil['ke'] }} Dari {{ $tampil['angsuran'] }}</span>
         </div>
         <div class="info-row">
             <span class="info-label">Tanggal:</span>
@@ -145,7 +145,9 @@
         </div>
 
         <div class="barcode-container">
-            <img src="https://chart.googleapis.com/chart?chs=100x100&cht=qr&chl={{ $tampil['id_pinjam'] }}" style="width: 80px;">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data={{ $tampil['id_pinjam'] }} || {{ $tampil['ke'] }} || {{ $tampil['id'] }}"
+                style="width: 80px;"
+                alt="QR Code Pinjaman">
         </div>
 
         <div class="footer">
