@@ -146,7 +146,7 @@
                                         </div>
                                         <div>
                                             <button class="btn btn-sm btn-outline-warning border-0 me-2" onclick="event.stopPropagation(); editPulsa('{{ $p->id_pinjam }}', '{{ $n->id }}', '{{ $p->nomer }}', '{{ $p->harga }}', '{{ $p->status }}')">
-                                                <i class="bi bi-pencil-square"></i> Edit'
+                                                <i class="bi bi-pencil-square"></i> Edit
                                             </button>
                                             <button class="btn btn-sm btn-outline-danger border-0" onclick="event.stopPropagation(); deletePulsa('{{ $p->id_pinjam }}')">
                                                 <i class="bi bi-trash"></i> Hapus

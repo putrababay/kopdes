@@ -60,8 +60,7 @@
         z-index: 9999 !important;
     }
 </style>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 
 
 <div class="sticky-filter border-bottom mb-3">

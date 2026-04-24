@@ -4,12 +4,10 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 	<title>Login Koperasi - Sistem Manajemen Pinjaman</title>
 	<meta name="description" content="Sistem Informasi Koperasi Desa. Kelola pinjaman, angsuran, dan data nasabah dengan mudah dan aman.">
 	<meta name="keywords" content="koperasi, pinjaman pulsa, manajemen nasabah, koperasi desa">
 	<meta name="author" content="Nama Koperasi Anda">
-
 	<meta property="og:type" content="website">
 	<meta property="og:url" content="{{ url()->current() }}">
 	<meta property="og:title" content="Login Koperasi - Sistem Manajemen Digital">
@@ -31,12 +29,7 @@
 	<meta name="apple-mobile-web-app-title" content="Kopdes">
 	<meta name="mobile-web-app-capable" content="yes">
 
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+	@vite(['resources/css/app.css', 'resources/js/app.js'])
 
 	<style>
 		:root {
@@ -309,7 +302,9 @@
 		</div>
 	</div>
 
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
+
+
 	<script>
 		// --- 1. Inisialisasi Variabel Global ---
 

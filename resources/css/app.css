@@ -1,11 +1,51 @@
-@import 'tailwindcss';
+/* 1. Import Library (OFFLINE) */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+@import '@fortawesome/fontawesome-free/css/all.min.css';
+@import 'select2/dist/css/select2.min.css';
+@import 'select2-bootstrap-5-theme/dist/select2-bootstrap-5-theme.min.css';
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+/* 2. Custom Styling Kopdes */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8f9fa;
+    color: #334155;
+}
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    display: flex;
+    justify-content: space-around;
+    padding: 12px 0;
+    border-top: 1px solid #e2e8f0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    z-index: 1030;
+}
+
+.nav-item-mobile {
+    text-align: center;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 0.75rem;
+}
+
+.nav-item-mobile i {
+    display: block;
+    font-size: 1.25rem;
+    margin-bottom: 2px;
+}
+
+.nav-item-mobile.active {
+    color: #4e73df;
+    font-weight: 600;
+}
+
+/* Fix Select2 agar serasi dengan Bootstrap 5 */
+.select2-container--bootstrap-5 .select2-selection {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
 }

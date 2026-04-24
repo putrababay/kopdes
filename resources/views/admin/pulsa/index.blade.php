@@ -120,7 +120,6 @@
 @include('admin.pulsa.modal')
 
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     let page = 1;
     let loading = false;
@@ -138,7 +137,9 @@
         $.ajax({
             url: "{{ route('pulsa.index') }}",
             type: "GET",
-            data: { search: search },
+            data: {
+                search: search
+            },
             beforeSend: function() {
                 $('#dataContainer').html('');
                 $('#loading').show();
@@ -197,33 +198,33 @@
     }
 
     function editPulsa(id, id_nasabah, nomer, harga, status) {
-    $('#modalTitle').text('Edit Pinjaman Pulsa');
-    $('#id_pinjam').val(id);
-    $('#id_nasaba').val(id_nasabah).trigger('change');
-    $('#nomer').val(nomer);
-    $('#harga').val(harga);
-    $('#harga_display').val(formatRupiah(harga ? harga.toString() : '0'));
+        $('#modalTitle').text('Edit Pinjaman Pulsa');
+        $('#id_pinjam').val(id);
+        $('#id_nasaba').val(id_nasabah).trigger('change');
+        $('#nomer').val(nomer);
+        $('#harga').val(harga);
+        $('#harga_display').val(formatRupiah(harga ? harga.toString() : '0'));
 
-    // --- LOGIKA SELECTED STATUS ---
-    // Konversi ke string, hilangkan spasi, dan jadikan huruf besar untuk pengecekan
-    let s = String(status).trim().toUpperCase();
-    
-    let valToSet = "";
-    if (s === "1" || s === "LUNAS") {
-        valToSet = "1";
-    } else if (s === "0" || s === "BELUM LUNAS") {
-        valToSet = "0";
+        // --- LOGIKA SELECTED STATUS ---
+        // Konversi ke string, hilangkan spasi, dan jadikan huruf besar untuk pengecekan
+        let s = String(status).trim().toUpperCase();
+
+        let valToSet = "";
+        if (s === "1" || s === "LUNAS") {
+            valToSet = "1";
+        } else if (s === "0" || s === "BELUM LUNAS") {
+            valToSet = "0";
+        }
+
+        // Set nilai ke elemen select
+        $('#status').val(valToSet);
+
+        // PENTING: Jika Anda menggunakan Select2 atau framework UI tertentu pada dropdown status, 
+        // tambahkan .trigger('change') agar tampilannya terupdate
+        $('#status').trigger('change');
+
+        $('#modalPulsa').modal('show');
     }
-
-    // Set nilai ke elemen select
-    $('#status').val(valToSet);
-    
-    // PENTING: Jika Anda menggunakan Select2 atau framework UI tertentu pada dropdown status, 
-    // tambahkan .trigger('change') agar tampilannya terupdate
-    $('#status').trigger('change'); 
-
-    $('#modalPulsa').modal('show');
-}
 
     function deletePulsa(id) {
         Swal.fire({
@@ -238,9 +239,16 @@
                 $.ajax({
                     url: "{{ url('pulsa/delete') }}/" + id,
                     type: "DELETE",
-                    data: { _token: "{{ csrf_token() }}" },
+                    data: {
+                        _token: "{{ csrf_token() }}"
+                    },
                     success: function(res) {
-                        Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Data dihapus!', timer: 1000 });
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: 'Data dihapus!',
+                            timer: 1000
+                        });
                         // Tetap di filter yang sama, refresh container
                         filterData();
                     }
@@ -268,7 +276,12 @@
             },
             success: function(res) {
                 $('#modalPulsa').modal('hide');
-                Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Data disimpan!', timer: 1000 });
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: 'Data disimpan!',
+                    timer: 1000
+                });
                 // REFRESH DATA (Pencarian tetap terjaga karena filterData mengambil nilai dari #searchName)
                 filterData();
             },
