@@ -29,7 +29,10 @@
 	<meta name="apple-mobile-web-app-title" content="Kopdes">
 	<meta name="mobile-web-app-capable" content="yes">
 
-	@vite(['resources/css/app.css', 'resources/js/app.js'])
+	<link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	
 
 	<style>
 		:root {
@@ -295,15 +298,15 @@
 
 				<div id="installApp" class="mt-3 text-center" style="display: none;">
 					<button type="button" class="btn btn-outline-primary rounded-pill w-100" id="btnInstall">
-						<i class="bi bi-download me-2"></i> Instal Aplikasi Koperasi
+						<i class="fa fa-download me-2"></i> Instal Aplikasi Koperasi
 					</button>
 				</div>
 			</form>
 		</div>
 	</div>
 
-	<script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
-
+	
+<script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
 
 	<script>
 		// --- 1. Inisialisasi Variabel Global ---
