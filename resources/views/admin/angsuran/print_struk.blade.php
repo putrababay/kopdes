@@ -26,7 +26,7 @@
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
         }
 
-        /* Header rapi & hemat ruang */
+        /* Header */
         .header {
             text-align: center;
             border-bottom: 1px dashed #000;
@@ -36,7 +36,7 @@
         .header h1 { font-size: 14px; margin: 0; }
         .header p { font-size: 10px; margin: 1px 0; }
 
-        /* Tabel Info agar titik dua sejajar */
+        /* Tabel Info */
         .info-table {
             width: 100%;
             font-size: 10px;
@@ -57,26 +57,47 @@
             font-weight: bold;
         }
 
+        /* QR Section */
+        .footer-flex {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+            padding-bottom: 5px;
+        }
         .qr-section {
-            text-align: center;
-            margin: 10px 0;
+            flex: 0 0 22mm; 
+            text-align: left;
         }
         .qr-section img {
-            width: 30mm; /* Ukuran optimal 58mm */
-            height: 30mm;
-            display: inline-block;
+            width: 22mm;
+            height: 22mm;
+            display: block;
+        }
+        .thanks-section {
+            flex: 1;
+            padding-left: 5px;
+            font-size: 8.5px;
+            line-height: 1.1;
+            text-align: left;
         }
 
         .footer {
             text-align: center;
-            font-size: 9px;
-            line-height: 1.2;
+            font-size: 10px;
+            margin-top: 5px;
         }
 
-        /* Spacer bawah agar tidak terpotong saat sobek kertas */
+        .date-line {
+            border-top: 1px dashed #ccc;
+            padding-top: 2px;
+            margin-top: 2px;
+            font-size: 8px;
+        }
+
+        /* Spacer bawah khusus cetak fisik */
         .print-spacer {
-            height: 25mm; 
-            display: none; /* Hanya muncul saat print */
+            height: 10mm; 
+            display: none;
         }
 
         /* Pengaturan Cetak */
@@ -84,7 +105,7 @@
             @page { size: 58mm auto; margin: 0; }
             body { background: #fff; padding: 0; margin: 0; }
             .receipt-container { width: 58mm; margin: 0; padding: 2mm; box-shadow: none; }
-            .button-group { display: none; }
+            .button-group { display: none !important; }
             .print-spacer { display: block; }
         }
 
@@ -95,6 +116,7 @@
             cursor: pointer; color: #fff; font-weight: bold; margin: 3px;
         }
         .btn-print { background: #333; }
+        .btn-download { background: #007bff; }
         .btn-wa { background: #25D366; }
     </style>
 </head>
@@ -137,45 +159,82 @@
             <div style="clear: both;"></div>
         </div>
 
-        <div class="qr-section">
-            <img crossorigin="anonymous" 
-                 src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ $tampil['id_pinjam'] }}|{{ $tampil['ke'] }}" 
-                 alt="QR Code">
-            <p style="font-size: 8px; margin-top: 4px;">Validasi Digital YAPUSA</p>
+        <div class="footer-flex">
+            <div class="qr-section">
+                <img crossorigin="anonymous" 
+                     src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ urlencode('https://kopdes.sibag.us/angsuran/printstruk/' . $tampil['id'] . '/' . $tampil['id_pinjam']) }}" 
+                     alt="QR">
+            </div>
+            <div class="thanks-section">
+                <strong>TERIMA KASIH</strong><br>
+                Simpan struk ini sebagai bukti pembayaran sah.<br>
+                <span style="font-size: 7px;">Validasi Digital YAPUSA</span>
+            </div>
         </div>
 
         <div class="footer">
-            <p>TERIMA KASIH<br>Simpan struk ini sebagai bukti sah.</p>
-            <p style="border-top: 1px dashed #ccc; padding-top: 3px;">{{ date('d-m-Y H:i:s') }}</p>
+            <p class="date-line">{{ date('d-m-Y H:i:s') }}</p>
         </div>
 
         <div class="print-spacer"></div>
     </div>
 
     <div class="button-group">
-        <button class="btn btn-print" onclick="window.print()">Cetak Struk</button>
+        <button class="btn btn-print" onclick="prosesCetak()">Cetak Printer</button>
+        <button class="btn btn-download" onclick="prosesDownload()">Download Gambar</button>
         <button class="btn btn-wa" onclick="shareToWA()">WhatsApp</button>
     </div>
 
     <script>
-        function shareToWA() {
-            const area = document.getElementById('receiptArea');
-            // Menghilangkan spacer saat ambil screenshot untuk WA
-            const spacer = document.querySelector('.print-spacer');
-            spacer.style.display = 'none';
+    // 1. Fungsi KHUSUS PRINTER
+    function prosesCetak() {
+        window.print();
+    }
 
-            html2canvas(area, { scale: 2, useCORS: true }).then(canvas => {
-                spacer.style.display = ''; // Kembalikan display spacer
-                const imgData = canvas.toDataURL('image/png');
-                const link = document.createElement('a');
-                link.download = 'Struk-{{ $tampil["nama"] }}.png';
-                link.href = imgData;
-                link.click();
+    // 2. Fungsi KHUSUS DOWNLOAD IMAGE
+    function prosesDownload() {
+        const area = document.getElementById('receiptArea');
+        const spacer = document.querySelector('.print-spacer');
+        
+        // Sembunyikan spacer agar gambar PNG tidak kepanjangan di bawah
+        if (spacer) spacer.style.display = 'none';
 
-                let text = encodeURIComponent("Halo {{ $tampil['nama'] }}, ini bukti angsuran ke-{{ $tampil['ke'] }}. Terimakasih.");
-                window.open("https://wa.me/{{ $tampil['no_tlp'] }}?text=" + text, "_blank");
-            });
-        }
+        html2canvas(area, { 
+            scale: 3, 
+            useCORS: true,
+            logging: false 
+        }).then(canvas => {
+            if (spacer) spacer.style.display = ''; // Kembalikan default
+            
+            const imgData = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = 'Struk-{{ $tampil["nama"] }}.png';
+            link.href = imgData;
+            link.click();
+        });
+    }
+
+    // 3. Fungsi WHATSAPP (Download + Link WA)
+    function shareToWA() {
+        const area = document.getElementById('receiptArea');
+        const spacer = document.querySelector('.print-spacer');
+        if (spacer) spacer.style.display = 'none';
+
+        html2canvas(area, { scale: 3, useCORS: true }).then(canvas => {
+            if (spacer) spacer.style.display = ''; 
+            
+            // Download Image Otomatis
+            const imgData = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = 'Struk-{{ $tampil["nama"] }}.png';
+            link.href = imgData;
+            link.click();
+
+            // Direct ke WA
+            let text = encodeURIComponent("Halo {{ $tampil['nama'] }}, ini bukti angsuran Anda. Terimakasih.");
+            window.open("https://wa.me/{{ $tampil['no_tlp'] }}?text=" + text, "_blank");
+        });
+    }
     </script>
 </body>
 

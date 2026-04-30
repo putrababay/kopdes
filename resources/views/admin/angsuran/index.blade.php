@@ -189,7 +189,7 @@
         </div>
     </div>
 </div>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
     // --- Global Variables ---
     let page = 1;
@@ -322,9 +322,21 @@
                     <td>${new Date(item.tgl).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'})} ${icon}</td>
                     <td class="fw-bold text-success">Rp ${(parseInt(item.nominal) || 0).toLocaleString('id-ID')}</td>
                     <td class="text-end">
-                        <button onclick="hapusAngsuran('${item.id}', '${p.id_pinjam_asli}')" class="btn btn-outline-danger btn-sm border-0"><i class="bi bi-trash"></i></button>
-                        <button onclick="printStruk('${item.id}', '${p.id_pinjam_asli}')" class="btn btn-outline-primary btn-sm border-0"><i class="bi bi-printer"></i></button>
-                    </td>
+    <!-- Tombol Hapus -->
+    <button onclick="hapusAngsuran('${item.id}', '${p.id_pinjam_asli}')" class="btn btn-outline-danger btn-sm border-0">
+        <i class="bi bi-trash"></i>
+    </button>
+    
+    <!-- Tombol Print (Buka Tab Baru) -->
+    <button onclick="printStruk('${item.id}', '${p.id_pinjam_asli}')" class="btn btn-outline-primary btn-sm border-0">
+        <i class="bi bi-printer"></i>
+    </button>
+
+    <!-- Tombol Download Image (Baru) -->
+    <button onclick="downloadImage('${item.id}', '${p.id_pinjam_asli}', '${item.nama}')" class="btn btn-outline-success btn-sm border-0">
+        <i class="bi bi-image"></i>
+    </button>
+</td>
                 </tr>`;
             });
         } else {
@@ -453,9 +465,67 @@
             }
         });
     }
+function printStruk(id, id_pinjam) {
+    window.open("{{ url('/angsuran/printstruk') }}/" + id + "/" + id_pinjam, '_blank');
+}
 
-    function printStruk(id,id_pinjam) {
-        window.open("{{ url('/angsuran/printstruk') }}/" + id + "/" + id_pinjam, '_blank');
-    }
+function downloadImage(id, id_pinjam, namaNasabah) {
+    // 1. URL Struk
+    const urlStruk = "{{ url('/angsuran/printstruk') }}/" + id + "/" + id_pinjam;
+    
+    // 2. Buat iframe tersembunyi
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.top = '0';
+    iframe.style.left = '0';
+    iframe.style.width = '58mm'; // Sesuai lebar struk
+    iframe.style.height = '100%';
+    iframe.style.visibility = 'hidden'; // Tersembunyi tapi tetap dirender
+    iframe.src = urlStruk;
+    document.body.appendChild(iframe);
+
+    iframe.onload = function() {
+        const iframeDoc = iframe.contentWindow.document;
+        
+        // Tunggu sedikit agar QR Code (API External) selesai dimuat di dalam iframe
+        setTimeout(() => {
+            const receiptArea = iframeDoc.getElementById('receiptArea');
+            
+            if (receiptArea) {
+                html2canvas(receiptArea, { 
+                    scale: 3, 
+                    useCORS: true,
+                    allowTaint: false, // Set false agar CORS bekerja maksimal
+                    backgroundColor: "#ffffff",
+                    onclone: (clonedDoc) => {
+                        // Sembunyikan tombol atau spacer di dokumen kloning agar gambar rapi
+                        const spacer = clonedDoc.querySelector('.print-spacer');
+                        const buttons = clonedDoc.querySelector('.button-group');
+                        if (spacer) spacer.style.display = 'none';
+                        if (buttons) buttons.style.display = 'none';
+                    }
+                }).then(canvas => {
+                    // 3. Proses Download Langsung
+                    const link = document.createElement('a');
+                    link.style.display = 'none';
+                    link.download = `Struk-${namaNasabah}-${id_pinjam}.png`;
+                    link.href = canvas.toDataURL('image/png', 1.0);
+                    document.body.appendChild(link);
+                    link.click();
+                    
+                    // 4. Bersihkan Resource
+                    document.body.removeChild(link);
+                    document.body.removeChild(iframe);
+                }).catch(err => {
+                    console.error("Canvas error:", err);
+                    document.body.removeChild(iframe);
+                });
+            } else {
+                alert("Elemen struk tidak ditemukan!");
+                document.body.removeChild(iframe);
+            }
+        }, 1000); // Delay 1 detik untuk memastikan QR code & font siap
+    };
+}
 </script>
 @endsection
