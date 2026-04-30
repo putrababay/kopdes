@@ -46,7 +46,7 @@ Route::delete('/angsuran/{id}', [AngsuranController::class, 'destroy'])->name('a
 Route::get('/angsuran/detail/{id}', [AngsuranController::class, 'getDetailNasabah'])->name('angsuran.get-detail-nasabah');
 // Hapus prefix 'admin' jika di JS Anda tidak memakainya
 // Sesuaikan URI dengan URL yang Anda panggil di browser
-Route::get('/angsuran/printstruk/{id}', [App\Http\Controllers\AngsuranController::class, 'printStruk'])->name('angsuran.print');
+Route::get('/angsuran/printstruk/{id}/{id_pinjam}', [App\Http\Controllers\AngsuranController::class, 'printStruk'])->name('angsuran.print');
 
 // Route untuk hapus (SweetAlert)
 Route::delete('/angsuran/delete/{id}', [AngsuranController::class, 'destroy'])->name('admin.angsuran.delete');

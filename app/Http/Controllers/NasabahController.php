@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\File;
 
 class NasabahController extends Controller
 {
+    /**
+     * Menampilkan daftar nasabah dengan fitur pencarian dan paginasi.
+     */
     public function index(Request $request)
     {
         $query = Nasabah::query();
@@ -24,9 +27,13 @@ class NasabahController extends Controller
         return view('admin.nasabah.index', compact('nasabah'));
     }
 
-    private function compressAndSaveFoto($file)
+    /**
+     * Logika simpan foto khusus KSWEB (Anti-Crash)
+     * Menggunakan konsep kompresi jika memungkinkan, atau move() jika GD error.
+     */
+    private function saveFotoWithFallback($file)
     {
-        $nama_foto = time() . "_" . uniqid() . ".jpg"; // Simpan sebagai .jpg untuk efisiensi
+        $nama_foto = time() . "_" . uniqid() . ".jpg";
         $destinationPath = public_path('foto');
         
         if (!File::isDirectory($destinationPath)) {
@@ -34,97 +41,121 @@ class NasabahController extends Controller
         }
 
         $filePath = $destinationPath . '/' . $nama_foto;
-        $imageInfo = getimagesize($file);
-        $mime = $imageInfo['mime'];
 
-        // Buat resource gambar berdasarkan tipe file asli
-        switch ($mime) {
-            case 'image/jpeg': $image = imagecreatefromjpeg($file); break;
-            case 'image/png':  
-                $image = imagecreatefrompng($file);
-                // Menangani transparansi PNG agar tidak jadi hitam saat diconvert ke JPG
-                $bg = imagecreatetruecolor(imagesx($image), imagesy($image));
-                imagefill($bg, 0, 0, imagecolorallocate($bg, 255, 255, 255));
-                imagecopy($bg, $image, 0, 0, 0, 0, imagesx($image), imagesy($image));
-                imagedestroy($image);
-                $image = $bg;
-                break;
-            default: return null;
+        try {
+            // 1. Baca data gambar
+            $imageData = file_get_contents($file->getRealPath());
+            $src = @imagecreatefromstring($imageData);
+
+            if (!$src) throw new \Exception("Gagal load gambar");
+
+            // 2. Tentukan ukuran baru (Resize ke 1200px lebarnya)
+            // Ini cara paling ampuh ngecilin size file kalau fitur kompresi rusak
+            $oldW = imagesx($src);
+            $oldH = imagesy($src);
+            
+            $newW = 1200; // Ukuran standar yang cukup tajam tapi ringan
+            $newH = floor($oldH * ($newW / $oldW));
+
+            $canvas = imagecreatetruecolor($newW, $newH);
+            
+            // Background putih
+            imagefill($canvas, 0, 0, imagecolorallocate($canvas, 255, 255, 255));
+
+            // 3. Proses Resize
+            imagecopyresampled($canvas, $src, 0, 0, 0, 0, $newW, $newH, $oldW, $oldH);
+
+            // 4. Simpan. Jika imagejpeg error, kita pakai imagepng sebagai cadangan (biasanya lebih stabil)
+            // Kualitas 60 untuk JPEG
+            if (!@imagejpeg($canvas, $filePath, 60)) {
+                // Jika JPEG masih protes library version, simpan sebagai PNG (biasanya library PNG sehat)
+                $filePathPng = str_replace('.jpg', '.png', $filePath);
+                if (@imagepng($canvas, $filePathPng, 6)) {
+                    $nama_foto = str_replace('.jpg', '.png', $nama_foto);
+                } else {
+                    throw new \Exception("Semua library GD Rusak");
+                }
+            }
+
+            imagedestroy($src);
+            imagedestroy($canvas);
+
+        } catch (\Throwable $e) {
+            // Jika semua cara GD gagal, baru gunakan move (file asli besar)
+            $file->move($destinationPath, $nama_foto);
         }
-
-        // Kompresi: Quality 50-60 biasanya memotong ukuran sampai 80% tapi tetap tajam
-        // Disimpan sebagai JPEG untuk memastikan sizenya kecil (di bawah 1MB)
-        imagejpeg($image, $filePath, 60); 
-        imagedestroy($image);
         
         return $nama_foto;
     }
 
+    /**
+     * Menyimpan data nasabah baru.
+     */
     public function store(Request $request) 
     {
         $request->validate([
-            'nik' => 'required|numeric|unique:master_nasabah,nik',
-            'nama' => 'required|string|max:255',
+            'nik'    => 'required|numeric|unique:master_nasabah,nik',
+            'nama'   => 'required|string|max:255',
             'no_tlp' => 'required',
-            'foto' => 'nullable|image|max:10240' // Izinkan upload sampai 10MB untuk dikompres
+            // Batasan 2MB agar aman di lingkungan Android
+            'foto'   => 'nullable|image|max:2048' 
         ]);
 
         $data = $request->all();
         $data['tgl_daftar'] = now(); 
         
         if ($request->hasFile('foto')) {
-            $data['foto'] = $this->compressAndSaveFoto($request->file('foto'));
+            $data['foto'] = $this->saveFotoWithFallback($request->file('foto'));
         }
 
         Nasabah::create($data);
         return redirect()->route('nasabah.index')->with('success', 'Nasabah berhasil ditambahkan!');
     }
 
+    /**
+     * Memperbarui data nasabah.
+     */
     public function update(Request $request, $id)
-{
-    $request->validate([
-        'nik'       => 'required|numeric|unique:master_nasabah,nik,' . $id,
-        'nama'      => 'required|string|max:255',
-        'no_tlp'    => 'required',
-        'pekerjaan' => 'required',
-        'foto'      => 'nullable|image|max:10240',
-    ]);
+    {
+        $request->validate([
+            'nik'    => 'required|numeric|unique:master_nasabah,nik,' . $id,
+            'nama'   => 'required|string|max:255',
+            'no_tlp' => 'required',
+            'foto'   => 'nullable|image|max:2048', 
+        ]);
 
-    $nasabah = Nasabah::findOrFail($id);
-    
-    // Ambil semua data kecuali foto
-    $data = $request->except(['foto']);
+        $nasabah = Nasabah::findOrFail($id);
+        $data = $request->except(['foto']);
 
-    // LOGIKA 1: Jika ada file foto baru yang diunggah
-    if ($request->hasFile('foto')) {
-        // Hapus foto lama jika ada
-        if ($nasabah->foto && File::exists(public_path('foto/' . $nasabah->foto))) {
-            File::delete(public_path('foto/' . $nasabah->foto));
+        if ($request->hasFile('foto')) {
+            // Hapus foto lama jika ada
+            if ($nasabah->foto && File::exists(public_path('foto/' . $nasabah->foto))) {
+                File::delete(public_path('foto/' . $nasabah->foto));
+            }
+            $data['foto'] = $this->saveFotoWithFallback($request->file('foto'));
+        } 
+        elseif ($request->remove_foto == '1') { 
+            if ($nasabah->foto && File::exists(public_path('foto/' . $nasabah->foto))) {
+                File::delete(public_path('foto/' . $nasabah->foto));
+            }
+            $data['foto'] = null;
         }
-        // Simpan & Kompres foto baru
-        $data['foto'] = $this->compressAndSaveFoto($request->file('foto'));
-    } 
-    // LOGIKA 2: Jika user sengaja ingin mengosongkan foto 
-    // (Kita asumsikan jika input file kosong dan ada flag khusus, atau sesuaikan kebutuhan)
-    else if ($request->remove_foto == '1') { 
-        if ($nasabah->foto && File::exists(public_path('foto/' . $nasabah->foto))) {
-            File::delete(public_path('foto/' . $nasabah->foto));
-        }
-        $data['foto'] = null;
+
+        $nasabah->update($data);
+        return redirect()->route('nasabah.index')->with('success', 'Data berhasil diperbarui!');
     }
-    // Jika tidak ada file baru dan tidak disuruh hapus, 
-    // kolom 'foto' tidak akan berubah karena sudah kita 'except' di awal.
 
-    $nasabah->update($data);
-    return redirect()->route('nasabah.index')->with('success', 'Data berhasil diperbarui!');
-}
-
+    /**
+     * Menghapus data nasabah.
+     */
     public function destroy($id)
     {
         $nasabah = Nasabah::findOrFail($id);
+        
         if ($nasabah->foto && File::exists(public_path('foto/' . $nasabah->foto))) {
             File::delete(public_path('foto/' . $nasabah->foto));
         }
+        
         $nasabah->delete();
         return redirect()->route('nasabah.index')->with('success', 'Nasabah berhasil dihapus!');
     }

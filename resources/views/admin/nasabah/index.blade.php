@@ -333,6 +333,7 @@
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.2.1/compressor.min.js"></script>
 
 {{-- Handler SweetAlert Flash Session --}}
 @if(session('success'))
@@ -504,22 +505,92 @@
     /**
      * Preview Foto saat Upload
      */
-    function previewImage(input) {
-        if (input.files && input.files[0]) {
-            if (document.getElementById('remove_foto')) {
-                document.getElementById('remove_foto').value = "0";
-            }
+    // function previewImage(input) {
+    //     if (input.files && input.files[0]) {
+    //         if (document.getElementById('remove_foto')) {
+    //             document.getElementById('remove_foto').value = "0";
+    //         }
+    //         const reader = new FileReader();
+    //         reader.onload = (e) => {
+    //             const preview = document.getElementById('imgPreview');
+    //             const container = document.getElementById('previewContainer');
+    //             preview.src = e.target.result;
+    //             container.style.display = 'block';
+    //             document.getElementById('previewLabel').innerText = "Preview Foto Baru:";
+    //         }
+    //         reader.readAsDataURL(input.files[0]);
+    //     }
+    // }
+
+    // Variable global untuk menyimpan file hasil kompresi
+let compressedFile = null;
+
+function previewImage(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Tampilkan loading/preview sementara
+    const container = document.getElementById('previewContainer');
+    const img = document.getElementById('imgPreview');
+    container.style.display = 'block';
+
+    // Jalankan Kompresi di Sisi Browser (Client-side)
+    new Compressor(file, {
+        quality: 0.6,      // Kualitas 60% (Sangat efektif mengecilkan size)
+        maxWidth: 1200,    // Resize lebar ke 1200px (Menjaga tetap tajam tapi ringan)
+        success(result) {
+            compressedFile = result; // Simpan hasil kompresi ke variabel
+            
+            // Tampilkan hasil kompresi ke preview
             const reader = new FileReader();
-            reader.onload = (e) => {
-                const preview = document.getElementById('imgPreview');
-                const container = document.getElementById('previewContainer');
-                preview.src = e.target.result;
-                container.style.display = 'block';
-                document.getElementById('previewLabel').innerText = "Preview Foto Baru:";
+            reader.onload = function(e) {
+                img.src = e.target.result;
             }
-            reader.readAsDataURL(input.files[0]);
-        }
+            reader.readAsDataURL(result);
+
+            console.log('Original size:', (file.size / 1024).toFixed(2) + ' KB');
+            console.log('Compressed size:', (result.size / 1024).toFixed(2) + ' KB');
+            
+            // Reset flag hapus foto
+            document.getElementById('remove_foto').value = "0";
+        },
+        error(err) {
+            console.error(err.message);
+            alert("Gagal memproses gambar, coba lagi.");
+        },
+    });
+}
+
+// Tangani Submit Form
+document.getElementById('formNasabah').addEventListener('submit', function(e) {
+    // Jika ada file yang baru dikompres, masukkan ke dalam FormData
+    if (compressedFile) {
+        e.preventDefault(); // Berhenti sejenak
+        
+        const formData = new FormData(this);
+        
+        // Hapus file asli dari form data dan ganti dengan yang sudah dikompres
+        formData.delete('foto');
+        formData.append('foto', compressedFile, compressedFile.name);
+
+        // Kirim menggunakan Fetch atau biarkan form submit ulang dengan file baru
+        // Namun cara paling simpel untuk Laravel tanpa AJAX adalah mengganti isi input file:
+        const dt = new DataTransfer();
+        dt.items.add(new File([compressedFile], compressedFile.name, {type: compressedFile.type}));
+        document.getElementById('fotoInput').files = dt.files;
+        
+        // Lanjutkan submit form secara normal
+        this.submit();
     }
+});
+
+function clearPhoto() {
+    document.getElementById('fotoInput').value = "";
+    document.getElementById('imgPreview').src = "";
+    document.getElementById('previewContainer').style.display = 'none';
+    document.getElementById('remove_foto').value = "1";
+    compressedFile = null;
+}
 
     /**
      * Fungsi Hapus Preview/Reset Foto (Sesuai Controller sebelumnya)

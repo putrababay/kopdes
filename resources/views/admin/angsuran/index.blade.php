@@ -323,7 +323,7 @@
                     <td class="fw-bold text-success">Rp ${(parseInt(item.nominal) || 0).toLocaleString('id-ID')}</td>
                     <td class="text-end">
                         <button onclick="hapusAngsuran('${item.id}', '${p.id_pinjam_asli}')" class="btn btn-outline-danger btn-sm border-0"><i class="bi bi-trash"></i></button>
-                        <button onclick="printStruk('${item.id}')" class="btn btn-outline-primary btn-sm border-0"><i class="bi bi-printer"></i></button>
+                        <button onclick="printStruk('${item.id}', '${p.id_pinjam_asli}')" class="btn btn-outline-primary btn-sm border-0"><i class="bi bi-printer"></i></button>
                     </td>
                 </tr>`;
             });
@@ -454,8 +454,8 @@
         });
     }
 
-    function printStruk(id) {
-        window.open("{{ url('/angsuran/printstruk') }}/" + id, '_blank');
+    function printStruk(id,id_pinjam) {
+        window.open("{{ url('/angsuran/printstruk') }}/" + id + "/" + id_pinjam, '_blank');
     }
 </script>
 @endsection

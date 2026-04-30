@@ -99,13 +99,13 @@ class AngsuranController extends Controller
 
 
 
-    public function printStruk($id)
+    public function printStruk($id = null, $id_pinjam = null)
     {
         // 1. Cari data angsuran
-        $angsuran = DB::table('angsuran')->where('id', $id)->first();
+        $angsuran = DB::table('angsuran')->where('id', $id)->where('id_pinjam', $id_pinjam)->first();
 
         if (!$angsuran) {
-            return "Data angsuran dengan ID $id tidak ditemukan.";
+            return "Data angsuran dengan ID $id atau $id_pinjam tidak ditemukan.";
         }
 
         // 2. Ambil data nasabah dan pinjaman
@@ -115,6 +115,7 @@ class AngsuranController extends Controller
 
         $pinjam = DB::table('nasabah_pinjam')
             ->where('id', $angsuran->id_pinjam) // Jika kolomnya bukan 'id', ganti di sini
+            ->where('id_pinjam', $id_pinjam)
             ->first();
 
         if (!$pinjam) {
